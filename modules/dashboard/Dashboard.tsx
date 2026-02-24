@@ -150,8 +150,20 @@ export default function Dashboard() {
         assets?.filter((a: any) => a.status === 'Desativado').forEach((a: any) =>
             list.push({ icon: AlertTriangle, text: `Ativo offline: ${a.name}`, severity: 'critical' })
         );
+
+        // License renewal alerts
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+        licenses?.filter((l: any) => {
+            if (!l.renewalDate) return false;
+            const rDate = new Date(l.renewalDate);
+            return rDate > now && rDate <= thirtyDaysFromNow;
+        }).forEach((l: any) => {
+            list.push({ icon: Clock, text: `Licença a vencer: ${l.name}`, severity: 'warning' });
+        });
+
         return list;
-    }, [assets, routines]);
+    }, [assets, routines, licenses]);
 
     return (
         <div className={styles.page}>

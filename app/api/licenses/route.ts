@@ -47,6 +47,15 @@ export async function POST(req: Request) {
             }
         });
 
+        // Add audit log
+        await prisma.auditLog.create({
+            data: {
+                userId: user.id,
+                action: 'CREATE',
+                resource: `LICENSE:${license.id} (${license.name})`,
+            }
+        });
+
         return NextResponse.json(license);
     } catch (error) {
         console.error('[LICENSE_CREATE_ERROR]', error);

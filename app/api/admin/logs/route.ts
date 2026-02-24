@@ -15,8 +15,12 @@ export async function GET() {
             orderBy: { timestamp: 'desc' },
             take: 100
         });
-        return NextResponse.json(logs);
+        return NextResponse.json({ logs }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ error: 'Erro ao buscar auditoria' }, { status: 500 });
+        console.error('Error fetching admin logs:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch admin logs' },
+            { status: 500 }
+        );
     }
 }

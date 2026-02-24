@@ -13,7 +13,8 @@ import {
     RefreshCw,
     Edit3,
     Trash2,
-    Filter
+    Filter,
+    Clock
 } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
 import LicenseForm from './LicenseForm';
@@ -25,17 +26,35 @@ export default function LicenseManagement() {
     const { data: licenses, error, mutate, isLoading } = useSWR('/api/licenses', fetcher);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedLicense, setSelectedLicense] = useState<any>(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const { showToast } = useToast();
 
     // Aggregates for quick audit
     const stats = useMemo(() => {
-        if (!licenses || !Array.isArray(licenses)) return { total: 0, cost: 0, usage: 0 };
+        if (!licenses || !Array.isArray(licenses)) return { total: 0, cost: 0, usage: 0, renewals: 0 };
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+
         return {
             total: licenses.length,
             cost: licenses.reduce((acc: number, l: any) => acc + (l.monthlyCost || 0), 0),
-            usage: licenses.reduce((acc: number, l: any) => acc + (l.usedSeats || 0), 0)
+            usage: licenses.reduce((acc: number, l: any) => acc + (l.usedSeats || 0), 0),
+            renewals: licenses.filter((l: any) => {
+                if (!l.renewalDate) return false;
+                const rDate = new Date(l.renewalDate);
+                return rDate > now && rDate <= thirtyDaysFromNow;
+            }).length
         };
     }, [licenses]);
+
+    const filteredLicenses = useMemo(() => {
+        if (!licenses || !Array.isArray(licenses)) return [];
+        return licenses.filter((l: any) =>
+            l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            l.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            l.responsible?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [licenses, searchTerm]);
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`Tem certeza que deseja excluir a licença "${name}"? Esta ação é irreversível.`)) return;
@@ -66,6 +85,8 @@ export default function LicenseManagement() {
                             type="text"
                             placeholder="Buscar softwares ou provedores..."
                             className={styles.input}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <button className={styles.actionButton} onClick={() => mutate()} title="Sincronizar">
@@ -79,34 +100,43 @@ export default function LicenseManagement() {
             </header>
 
             {/* License Stats Banner */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className={styles.tableContainer} style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ background: 'var(--accent-light)', padding: '0.75rem', borderRadius: '12px' }}>
-                        <Key color="var(--accent-primary)" size={24} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                <div className={styles.tableContainer} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ background: 'var(--accent-light)', padding: '0.6rem', borderRadius: '10px' }}>
+                        <Key color="var(--accent-primary)" size={20} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Total de Licenças</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.total}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Total</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{stats.total}</div>
                     </div>
                 </div>
-                <div className={styles.tableContainer} style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: '12px' }}>
-                        <DollarSign color="#10b981" size={24} />
+                <div className={styles.tableContainer} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.6rem', borderRadius: '10px' }}>
+                        <DollarSign color="#10b981" size={20} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Custo Mensal Estimado</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Custo Mensal</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.cost)}
                         </div>
                     </div>
                 </div>
-                <div className={styles.tableContainer} style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.75rem', borderRadius: '12px' }}>
-                        <Users color="#f59e0b" size={24} />
+                <div className={styles.tableContainer} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.6rem', borderRadius: '10px' }}>
+                        <Users color="#f59e0b" size={20} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Assentos em Uso</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.usage}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Assentos</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{stats.usage}</div>
+                    </div>
+                </div>
+                <div className={styles.tableContainer} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ background: stats.renewals > 0 ? 'rgba(239, 68, 68, 0.1)' : 'var(--surface-2)', padding: '0.6rem', borderRadius: '10px' }}>
+                        <Clock color={stats.renewals > 0 ? '#ef4444' : 'var(--text-tertiary)'} size={20} />
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Renovações (30d)</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700, color: stats.renewals > 0 ? '#ef4444' : 'inherit' }}>{stats.renewals}</div>
                     </div>
                 </div>
             </div>
@@ -126,13 +156,13 @@ export default function LicenseManagement() {
                                 <th className={styles.th}>Software/Provedor</th>
                                 <th className={styles.th}>Uso/Assentos</th>
                                 <th className={styles.th}>Custo Mensal</th>
+                                <th className={styles.th}>Renovação</th>
                                 <th className={styles.th}>Status</th>
-                                <th className={styles.th}>Responsável</th>
                                 <th className={styles.th}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {licenses?.map((license: any) => (
+                            {filteredLicenses?.map((license: any) => (
                                 <tr key={license.id} className={styles.tr}>
                                     <td className={styles.td}>
                                         <div className={styles.assetName}>{license.name}</div>
@@ -155,12 +185,14 @@ export default function LicenseManagement() {
                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(license.monthlyCost)}
                                     </td>
                                     <td className={styles.td}>
+                                        {license.renewalDate ? new Date(license.renewalDate).toLocaleDateString('pt-BR') : 'N/A'}
+                                    </td>
+                                    <td className={styles.td}>
                                         <span className={`${styles.statusBadge} ${license.status === 'Ativo' ? styles.statusActive : styles.statusDisabled
                                             }`}>
                                             {license.status}
                                         </span>
                                     </td>
-                                    <td className={styles.td}>{license.responsible || 'N/A'}</td>
                                     <td className={styles.td}>
                                         <div className={styles.actionsCell}>
                                             <button className={styles.actionButton} onClick={() => handleEdit(license)} title="Editar">

@@ -96,14 +96,15 @@ export default function LicenseForm({ license, onClose, onSuccess }: LicenseForm
                         </div>
                     </div>
 
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>Chave de Ativação (Opcional)</label>
-                        <input {...register('key')} className={styles.input} placeholder="ID ou Serial" />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>Responsável</label>
-                        <input {...register('responsible')} className={styles.input} placeholder="Nome do gestor" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Responsável</label>
+                            <input {...register('responsible')} className={styles.input} placeholder="Nome do gestor" />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Data de Renovação</label>
+                            <input type="date" {...register('renewalDate')} className={styles.input} />
+                        </div>
                     </div>
 
                     <div className={styles.modalFooter}>

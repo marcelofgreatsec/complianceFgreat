@@ -31,6 +31,14 @@ export async function PATCH(
             data: updateData
         });
 
+        await prisma.auditLog.create({
+            data: {
+                userId: user.id,
+                action: 'UPDATE',
+                resource: `LICENSE:${id} (${license.name})`,
+            }
+        });
+
         return NextResponse.json(license);
     } catch (error) {
         return NextResponse.json({ error: 'Erro ao atualizar licença' }, { status: 500 });
@@ -54,8 +62,18 @@ export async function DELETE(
 
         const { id } = await context.params;
 
+        const license = await prisma.license.findUnique({ where: { id } });
+
         await prisma.license.delete({
             where: { id }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                userId: user.id,
+                action: 'DELETE',
+                resource: `LICENSE:${id} (${license?.name || 'Unknown'})`,
+            }
         });
 
         return NextResponse.json({ message: 'Licença excluída com sucesso' });
