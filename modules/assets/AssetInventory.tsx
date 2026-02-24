@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import {
     Search,
@@ -17,7 +17,16 @@ import {
 import styles from '@/styles/Module.module.css';
 import AssetForm from './AssetForm';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+        const error = new Error('Erro ao carregar dados');
+        (error as any).info = await res.json();
+        (error as any).status = res.status;
+        throw error;
+    }
+    return res.json();
+};
 
 export default function AssetInventory() {
     const { data: assets, error, mutate, isLoading } = useSWR('/api/assets', fetcher);
@@ -37,11 +46,14 @@ export default function AssetInventory() {
         }
     };
 
-    const filteredAssets = assets?.filter((asset: any) =>
-        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        asset.ip?.includes(searchTerm)
-    );
+    const filteredAssets = useMemo(() => {
+        if (!Array.isArray(assets)) return [];
+        return assets.filter((asset: any) =>
+            asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            asset.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            asset.ip?.includes(searchTerm)
+        );
+    }, [assets, searchTerm]);
 
     return (
         <div className={styles.moduleWrapper}>
@@ -100,8 +112,8 @@ export default function AssetInventory() {
                                     <td className={styles.td}>{asset.ip || '-'}</td>
                                     <td className={styles.td}>
                                         <span className={`${styles.statusBadge} ${asset.status === 'Ativo' ? styles.statusActive :
-                                                asset.status === 'Manutenção' ? styles.statusMaintenance :
-                                                    styles.statusDisabled
+                                            asset.status === 'Manutenção' ? styles.statusMaintenance :
+                                                styles.statusDisabled
                                             }`}>
                                             {asset.status}
                                         </span>

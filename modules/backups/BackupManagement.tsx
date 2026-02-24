@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import useSWR from 'swr';
 import {
     Search,
@@ -19,7 +19,16 @@ import styles from '@/styles/Module.module.css';
 import RoutineForm from './RoutineForm';
 import { useToast } from '@/components/Toast';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+        const error = new Error('Erro ao carregar dados');
+        (error as any).info = await res.json();
+        (error as any).status = res.status;
+        throw error;
+    }
+    return res.json();
+};
 
 /**
  * BackupManagement Module
@@ -29,7 +38,15 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
  */
 export default function BackupManagement() {
     const { data: routines, error, mutate, isLoading } = useSWR('/api/backups', fetcher);
+
+    // Filtering logic
+    const filteredRoutines = routines?.filter((r: any) =>
+        r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.responsible?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
+
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isExecuting, setIsExecuting] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const { showToast } = useToast();
@@ -98,6 +115,8 @@ export default function BackupManagement() {
                             type="text"
                             placeholder="Pesquisar rotinas críticas..."
                             className={styles.input}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <button
@@ -139,7 +158,7 @@ export default function BackupManagement() {
                             </tr>
                         </thead>
                         <tbody>
-                            {routines?.map((routine: any) => (
+                            {Array.isArray(filteredRoutines) && filteredRoutines.map((routine: any) => (
                                 <tr key={routine.id} className={styles.tr}>
                                     <td className={styles.td}>
                                         <div className={styles.assetName}>{routine.name}</div>
@@ -148,17 +167,17 @@ export default function BackupManagement() {
                                     <td className={styles.td}>{routine.type}</td>
                                     <td className={styles.td}>{routine.frequency}</td>
                                     <td className={styles.td}>
-                                        {routine.lastRun ? (
+                                        {routine.logs?.[0] ? (
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <Clock size={12} />
-                                                {new Date(routine.lastRun).toLocaleString('pt-BR')}
+                                                {new Date(routine.logs[0].timestamp).toLocaleString('pt-BR')}
                                             </span>
                                         ) : 'Sem registros'}
                                     </td>
                                     <td className={styles.td}>
                                         <span className={`${styles.statusBadge} ${routine.status === 'Sucesso' ? styles.statusActive :
-                                                routine.status === 'Erro' ? styles.statusDisabled :
-                                                    styles.statusMaintenance
+                                            routine.status === 'Erro' ? styles.statusDisabled :
+                                                styles.statusMaintenance
                                             }`}>
                                             {routine.status === 'Sucesso' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
                                             {routine.status === 'Erro' && <XCircle size={12} style={{ marginRight: 4 }} />}

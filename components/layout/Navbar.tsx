@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useRef, useEffect } from 'react';
 import { Bell, Moon, Sun, Search, LayoutGrid, X } from 'lucide-react';
 import { useTheme } from '../../hooks/use-theme';
@@ -5,7 +7,9 @@ import styles from './Navbar.module.css';
 import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-    const { theme, toggleTheme } = useTheme();
+    const themeContext = useTheme();
+    const theme = themeContext?.theme || 'dark';
+    const toggleTheme = themeContext?.toggleTheme || (() => { });
     const pathname = usePathname();
     const [searchOpen, setSearchOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);

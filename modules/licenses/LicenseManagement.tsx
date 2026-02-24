@@ -20,7 +20,16 @@ import styles from '@/styles/Module.module.css';
 import LicenseForm from './LicenseForm';
 import { useToast } from '@/components/Toast';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+        const error = new Error('Erro ao carregar dados');
+        (error as any).info = await res.json();
+        (error as any).status = res.status;
+        throw error;
+    }
+    return res.json();
+};
 
 export default function LicenseManagement() {
     const { data: licenses, error, mutate, isLoading } = useSWR('/api/licenses', fetcher);
@@ -162,7 +171,7 @@ export default function LicenseManagement() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredLicenses?.map((license: any) => (
+                            {Array.isArray(filteredLicenses) && filteredLicenses.map((license: any) => (
                                 <tr key={license.id} className={styles.tr}>
                                     <td className={styles.td}>
                                         <div className={styles.assetName}>{license.name}</div>
