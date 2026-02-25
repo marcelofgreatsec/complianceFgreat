@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { AssetSchema } from '@/lib/validations/asset-schema';

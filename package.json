@@ -11,19 +11,23 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@prisma/client": "^5.22.0",
+    "@prisma/adapter-pg": "^7.4.1",
+    "@prisma/client": "^7.4.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "@types/dompurify": "^3.0.5",
+    "@types/pg": "^8.16.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.2",
     "bcryptjs": "^3.0.3",
     "dompurify": "^3.3.1",
+    "dotenv": "^17.3.1",
     "framer-motion": "^12.34.3",
     "isomorphic-dompurify": "^3.0.0",
     "konva": "^10.2.0",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
+    "pg": "^8.19.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
@@ -39,7 +43,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "prisma": "^5.22.0",
+    "prisma": "^7.4.1",
     "typescript": "^5"
   }
 }
