@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { X, Loader2, Save } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
+import { fetchWithCSRF } from '@/lib/api';
 
 const routineSchema = z.object({
     assetId: z.string().min(1, 'ID do Ativo é obrigatório'),
@@ -34,7 +35,7 @@ export default function RoutineForm({ onClose, onSuccess }: RoutineFormProps) {
         setError('');
 
         try {
-            const res = await fetch('/api/backups', {
+            const res = await fetchWithCSRF('/api/backups', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

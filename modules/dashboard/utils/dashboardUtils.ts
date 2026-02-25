@@ -1,3 +1,4 @@
+import { fetchWithCSRF } from '@/lib/api';
 /**
  * Dashboard Utility Functions
  * 
@@ -46,7 +47,7 @@ export function generateHeatmap() {
  * Standard fetcher for SWR.
  */
 export const fetcher = async (url: string) => {
-    const res = await fetch(url);
+    const res = await fetchWithCSRF(url);
     if (!res.ok) {
         const error = new Error('Erro ao carregar dados do servidor');
         // Attach extra info to the error object.

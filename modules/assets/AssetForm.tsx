@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { X, Loader2, Save } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
 import { useToast } from '@/components/Toast';
+import { fetchWithCSRF } from '@/lib/api';
 
 const assetSchema = z.object({
     id: z.string().min(3, 'ID deve ter no mínimo 3 caracteres'),
@@ -51,7 +52,7 @@ export default function AssetForm({ onClose, onSuccess, initialData }: AssetForm
             const url = initialData ? `/api/assets/${initialData.id}` : '/api/assets';
             const method = initialData ? 'PUT' : 'POST';
 
-            const res = await fetch(url, {
+            const res = await fetchWithCSRF(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

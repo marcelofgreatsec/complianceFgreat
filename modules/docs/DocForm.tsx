@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
+import { fetchWithCSRF } from '@/lib/api';
 
 const TYPES = ['Documento', 'Link', 'Credencial', 'Procedimento'];
 
@@ -27,7 +28,7 @@ export default function DocForm({ categories, initialData, onClose, onSuccess }:
         try {
             const url = initialData ? `/api/docs/${initialData.id}` : '/api/docs';
             const method = initialData ? 'PUT' : 'POST';
-            const res = await fetch(url, {
+            const res = await fetchWithCSRF(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

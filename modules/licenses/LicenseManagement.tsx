@@ -19,9 +19,10 @@ import {
 import styles from '@/styles/Module.module.css';
 import LicenseForm from './LicenseForm';
 import { useToast } from '@/components/Toast';
+import { fetchWithCSRF } from '@/lib/api';
 
 const fetcher = async (url: string) => {
-    const res = await fetch(url);
+    const res = await fetchWithCSRF(url);
     if (!res.ok) {
         const error = new Error('Erro ao carregar dados');
         (error as any).info = await res.json();
@@ -69,7 +70,7 @@ export default function LicenseManagement() {
         if (!confirm(`Tem certeza que deseja excluir a licença "${name}"? Esta ação é irreversível.`)) return;
 
         try {
-            const res = await fetch(`/api/licenses/${id}`, { method: 'DELETE' });
+            const res = await fetchWithCSRF(`/api/licenses/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Falha ao excluir licença');
             showToast(`Licença "${name}" removida com sucesso.`, 'success');
             mutate();

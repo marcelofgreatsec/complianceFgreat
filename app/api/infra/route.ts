@@ -2,9 +2,21 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { InfrastructureSchema } from '@/lib/validators';
+import { rateLimit } from '@/lib/rate-limit';
+import { validateCSRF } from '@/lib/csrf';
+import { logSecurity } from '@/lib/monitor';
+import { log } from '@/lib/audit';
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/infra' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -23,6 +35,20 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/infra' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
+        const token = req.headers.get('x-csrf-token');
+        if (!token || !(await validateCSRF(token))) {
+            logSecurity({ type: 'CSRF_FAILED', severity: 'CRITICAL', details: { ip, route: '/api/infra' } });
+            return NextResponse.json({ error: 'Invalid CSRF' }, { status: 403 });
+        }
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || user.user_metadata?.role === 'VIEWER') {
@@ -39,6 +65,13 @@ export async function POST(req: Request) {
             create: { name: name!, data: data! }
         }) : await prisma.infrastructure.create({
             data: { name: name!, data: data! }
+        });
+
+        await log({
+            action: id ? 'UPDATE' : 'CREATE',
+            table: 'infrastructure',
+            recordId: diagram.id,
+            request: req
         });
 
         return NextResponse.json(diagram);

@@ -3,9 +3,21 @@ import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import bcrypt from 'bcryptjs';
 import { DocumentSchema } from '@/lib/validators';
+import { rateLimit } from '@/lib/rate-limit';
+import { validateCSRF } from '@/lib/csrf';
+import { log } from '@/lib/audit';
+import { logSecurity } from '@/lib/monitor';
 
 export async function GET(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/docs' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
         const { searchParams } = new URL(req.url);
         const category = searchParams.get('category');
         const type = searchParams.get('type');
@@ -37,6 +49,20 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/docs' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
+        const token = req.headers.get('x-csrf-token');
+        if (!token || !(await validateCSRF(token))) {
+            logSecurity({ type: 'CSRF_FAILED', severity: 'CRITICAL', details: { ip, route: '/api/docs' } });
+            return NextResponse.json({ error: 'Invalid CSRF' }, { status: 403 });
+        }
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || !['ADMIN', 'TI'].includes(user.user_metadata?.role)) {
@@ -70,6 +96,13 @@ export async function POST(req: Request) {
 
         await prisma.docAccessLog.create({
             data: { documentId: doc.id, userId: user.id, action: 'CREATE' },
+        });
+
+        await log({
+            action: 'CREATE',
+            table: 'documentos',
+            recordId: doc.id,
+            request: req
         });
 
         return NextResponse.json({ ...doc, credPass: doc.credPass ? '••••••••' : null });

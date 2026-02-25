@@ -23,6 +23,7 @@ import {
     HandIcon
 } from 'lucide-react';
 import styles from './InfraWhiteboard.module.css';
+import { fetchWithCSRF } from '@/lib/api';
 
 // Dynamic Konva component to prevent SSR issues
 const Canvas = dynamic(() => import('./InfraCanvas'), {
@@ -35,7 +36,7 @@ const Canvas = dynamic(() => import('./InfraCanvas'), {
     )
 });
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetchWithCSRF(url).then(res => res.json());
 
 export default function InfraWhiteboard() {
     const { data: diagrams, mutate } = useSWR('/api/infra', fetcher);
@@ -71,7 +72,7 @@ export default function InfraWhiteboard() {
     const saveDiagram = async () => {
         setIsSaving(true);
         try {
-            await fetch('/api/infra', {
+            await fetchWithCSRF('/api/infra', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

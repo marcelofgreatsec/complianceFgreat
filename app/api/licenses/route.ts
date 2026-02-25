@@ -2,13 +2,25 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { LicenseSchema } from '@/lib/validators';
+import { rateLimit } from '@/lib/rate-limit';
+import { validateCSRF } from '@/lib/csrf';
+import { log } from '@/lib/audit';
+import { logSecurity } from '@/lib/monitor';
 
 /**
  * GET /api/licenses
  * Fetch all licenses.
  */
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/licenses' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -31,6 +43,20 @@ export async function GET() {
  */
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(ip);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/licenses' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
+        const token = req.headers.get('x-csrf-token');
+        if (!token || !(await validateCSRF(token))) {
+            logSecurity({ type: 'CSRF_FAILED', severity: 'CRITICAL', details: { ip, route: '/api/licenses' } });
+            return NextResponse.json({ error: 'Invalid CSRF' }, { status: 403 });
+        }
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || !['ADMIN', 'TI'].includes(user.user_metadata?.role)) {
@@ -56,13 +82,11 @@ export async function POST(req: Request) {
             }
         });
 
-        // Add audit log
-        await prisma.auditLog.create({
-            data: {
-                userId: user.id,
-                action: 'CREATE',
-                resource: `LICENSE:${license.id} (${license.name})`,
-            }
+        await log({
+            action: 'CREATE',
+            table: 'licencas',
+            recordId: license.id,
+            request: req
         });
 
         return NextResponse.json(license);

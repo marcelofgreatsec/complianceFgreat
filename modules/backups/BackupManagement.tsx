@@ -18,9 +18,10 @@ import {
 import styles from '@/styles/Module.module.css';
 import RoutineForm from './RoutineForm';
 import { useToast } from '@/components/Toast';
+import { fetchWithCSRF } from '@/lib/api';
 
 const fetcher = async (url: string) => {
-    const res = await fetch(url);
+    const res = await fetchWithCSRF(url);
     if (!res.ok) {
         const error = new Error('Erro ao carregar dados');
         (error as any).info = await res.json();
@@ -59,7 +60,7 @@ export default function BackupManagement() {
         setIsExecuting(id);
 
         try {
-            const res = await fetch(`/api/backups/${id}/logs`, {
+            const res = await fetchWithCSRF(`/api/backups/${id}/logs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -88,7 +89,7 @@ export default function BackupManagement() {
 
         setIsDeleting(id);
         try {
-            const res = await fetch(`/api/backups/${id}`, {
+            const res = await fetchWithCSRF(`/api/backups/${id}`, {
                 method: 'DELETE',
             });
 

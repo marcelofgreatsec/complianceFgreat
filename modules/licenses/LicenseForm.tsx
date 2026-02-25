@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { X, Loader2 } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
 import { useToast } from '@/components/Toast';
+import { fetchWithCSRF } from '@/lib/api';
 
 interface LicenseFormProps {
     license?: any;
@@ -33,7 +34,7 @@ export default function LicenseForm({ license, onClose, onSuccess }: LicenseForm
             const url = license ? `/api/licenses/${license.id}` : '/api/licenses';
             const method = license ? 'PATCH' : 'POST';
 
-            const res = await fetch(url, {
+            const res = await fetchWithCSRF(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

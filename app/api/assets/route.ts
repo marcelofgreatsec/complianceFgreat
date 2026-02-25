@@ -2,9 +2,21 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { AssetSchema } from '@/lib/validators';
+import { rateLimit } from '@/lib/rate-limit';
+import { validateCSRF } from '@/lib/csrf';
+import { log } from '@/lib/audit';
+import { logSecurity } from '@/lib/monitor';
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(clientIp);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip: clientIp, route: '/api/assets' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -23,6 +35,20 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+        const { success } = await rateLimit(clientIp);
+
+        if (!success) {
+            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip: clientIp, route: '/api/assets' } });
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+        }
+
+        const token = req.headers.get('x-csrf-token');
+        if (!token || !(await validateCSRF(token))) {
+            logSecurity({ type: 'CSRF_FAILED', severity: 'CRITICAL', details: { ip: clientIp, route: '/api/assets' } });
+            return NextResponse.json({ error: 'Invalid CSRF' }, { status: 403 });
+        }
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user || user.user_metadata?.role === 'VIEWER') {
@@ -41,22 +67,11 @@ export async function POST(req: Request) {
             data: { id: assetId, name: name!, type: type!, location: location || '', status, ip: ip || null }
         });
 
-        // Create initial history record
-        await prisma.assetHistory.create({
-            data: {
-                assetId: assetId,
-                action: 'Criação',
-                details: 'Ativo cadastrado no sistema',
-            }
-        });
-
-        // Log the audit
-        await prisma.auditLog.create({
-            data: {
-                userId: user.id,
-                action: 'CREATE_ASSET',
-                resource: assetId,
-            }
+        await log({
+            action: 'CREATE',
+            table: 'ativos',
+            recordId: assetId,
+            request: req
         });
 
         return NextResponse.json(asset);

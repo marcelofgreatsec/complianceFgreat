@@ -16,9 +16,10 @@ import {
 } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
 import AssetForm from './AssetForm';
+import { fetchWithCSRF } from '@/lib/api';
 
 const fetcher = async (url: string) => {
-    const res = await fetch(url);
+    const res = await fetchWithCSRF(url);
     if (!res.ok) {
         const error = new Error('Erro ao carregar dados');
         (error as any).info = await res.json();
@@ -38,7 +39,7 @@ export default function AssetInventory() {
         if (!confirm('Tem certeza que deseja excluir este ativo?')) return;
 
         try {
-            const res = await fetch(`/api/assets/${id}`, { method: 'DELETE' });
+            const res = await fetchWithCSRF(`/api/assets/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Erro ao excluir');
             mutate();
         } catch (err) {

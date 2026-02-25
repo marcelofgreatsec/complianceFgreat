@@ -15,8 +15,9 @@ import {
     Lock
 } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
+import { fetchWithCSRF } from '@/lib/api';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetchWithCSRF(url).then(res => res.json());
 
 export default function Administration() {
     const { data: auditLogs, isLoading: loadingLogs } = useSWR('/api/admin/logs', fetcher);

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
+import { fetchWithCSRF } from '@/lib/api';
 
 const ICON_OPTIONS = [
     { value: 'folder', label: '📁 Pasta' },
@@ -27,7 +28,7 @@ export default function CategoryForm({ onClose, onSuccess }: { onClose: () => vo
         if (!name.trim()) return;
         setLoading(true);
         try {
-            const res = await fetch('/api/docs/categories', {
+            const res = await fetchWithCSRF('/api/docs/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, icon }),

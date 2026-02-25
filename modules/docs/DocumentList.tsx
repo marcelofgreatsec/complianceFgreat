@@ -12,8 +12,9 @@ import {
 import styles from './Docs.module.css';
 import DocForm from './DocForm';
 import CategoryForm from './CategoryForm';
+import { fetchWithCSRF } from '@/lib/api';
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = (url: string) => fetchWithCSRF(url).then((r) => r.json());
 
 const CATEGORY_ICONS: Record<string, any> = {
     vpn: Wifi, remote: Server, servers: Server, network: Wifi,
@@ -51,7 +52,7 @@ function CredentialBadge({ docId }: { docId: string }) {
         if (revealed) { setRevealed(null); return; }
         setLoading(true);
         try {
-            const res = await fetch(`/api/docs/${docId}/reveal`, { method: 'POST' });
+            const res = await fetchWithCSRF(`/api/docs/${docId}/reveal`, { method: 'POST' });
             if (!res.ok) throw new Error('Sem permissão');
             const data = await res.json();
             setRevealed(data);
@@ -124,13 +125,13 @@ export default function DocumentList() {
 
     const handleDelete = async (id: string) => {
         if (!confirm('Excluir documento permanentemente?')) return;
-        await fetch(`/api/docs/${id}`, { method: 'DELETE' });
+        await fetchWithCSRF(`/api/docs/${id}`, { method: 'DELETE' });
         mutDocs();
     };
 
     const handleDeleteCat = async (id: string) => {
         if (!confirm('Excluir categoria e todos os documentos dela?')) return;
-        await fetch(`/api/docs/categories/${id}`, { method: 'DELETE' });
+        await fetchWithCSRF(`/api/docs/categories/${id}`, { method: 'DELETE' });
         mutCats();
         mutDocs();
     };
