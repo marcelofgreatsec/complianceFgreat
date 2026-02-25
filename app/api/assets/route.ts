@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { AssetSchema } from '@/lib/validators';
 
 export async function GET() {
     try {
+        const supabase = await createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+        }
+
         const assets = await prisma.asset.findMany({
             orderBy: { updatedAt: 'desc' }
         });
@@ -22,16 +30,21 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { id, name, type, location, status, ip } = body;
+
+        // Zod validation and sanitization
+        const validatedData = AssetSchema.parse(body);
+        const { name, type, location, status, ip } = validatedData;
+
+        const assetId = body.id || `AST-${Date.now()}`;
 
         const asset = await prisma.asset.create({
-            data: { id, name, type, location, status, ip }
+            data: { id: assetId, name: name!, type: type!, location: location || '', status, ip: ip || null }
         });
 
         // Create initial history record
         await prisma.assetHistory.create({
             data: {
-                assetId: id,
+                assetId: assetId,
                 action: 'Criação',
                 details: 'Ativo cadastrado no sistema',
             }
@@ -42,12 +55,15 @@ export async function POST(req: Request) {
             data: {
                 userId: user.id,
                 action: 'CREATE_ASSET',
-                resource: id,
+                resource: assetId,
             }
         });
 
         return NextResponse.json(asset);
-    } catch (error) {
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return NextResponse.json({ error: 'Dados inválidos', details: error.errors }, { status: 400 });
+        }
         return NextResponse.json({ error: 'Erro ao criar ativo' }, { status: 500 });
     }
 }

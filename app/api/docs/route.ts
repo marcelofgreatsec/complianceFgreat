@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import bcrypt from 'bcryptjs';
+import { DocumentSchema } from '@/lib/validators';
 
 export async function GET(req: Request) {
     try {
@@ -43,7 +44,8 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { title, categoryId, type, description, tags, content, fileUrl, fileType, credUser, credPass, responsible } = body;
+        const validatedData = DocumentSchema.parse(body);
+        const { title, categoryId, type, description, tags, content, fileUrl, fileType, credUser, credPass, responsible } = validatedData;
 
         let encryptedPass: string | undefined;
         if (credPass && type === 'Credencial') {
@@ -52,7 +54,7 @@ export async function POST(req: Request) {
 
         const doc = await prisma.document.create({
             data: {
-                title, categoryId, type,
+                title: title!, categoryId: categoryId!, type: type!,
                 description: description || null,
                 tags: tags || null,
                 content: content || null,
@@ -72,6 +74,9 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ...doc, credPass: doc.credPass ? '••••••••' : null });
     } catch (e: any) {
+        if (e.name === 'ZodError') {
+            return NextResponse.json({ error: 'Dados inválidos', details: e.errors }, { status: 400 });
+        }
         console.error('Document POST error:', e?.message);
         return NextResponse.json({ error: 'Erro ao criar documento: ' + e?.message }, { status: 500 });
     }

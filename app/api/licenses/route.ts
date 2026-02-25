@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { LicenseSchema } from '@/lib/validators';
 
 /**
  * GET /api/licenses
@@ -8,6 +9,13 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET() {
     try {
+        const supabase = await createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+        }
+
         const licenses = await prisma.license.findMany({
             orderBy: { name: 'asc' }
         });
@@ -30,20 +38,21 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { name, provider, key, totalSeats, usedSeats, monthlyCost, renewalDate, status, responsible, notes } = body;
+        const validatedData = LicenseSchema.parse(body);
+        const { name, provider, key, totalSeats, usedSeats, monthlyCost, renewalDate, status, responsible, notes } = validatedData;
 
         const license = await prisma.license.create({
             data: {
-                name,
-                provider,
-                key,
-                totalSeats: parseInt(totalSeats) || 1,
-                usedSeats: parseInt(usedSeats) || 0,
-                monthlyCost: parseFloat(monthlyCost) || 0.0,
+                name: name!,
+                provider: provider!,
+                key: key || null,
+                totalSeats,
+                usedSeats,
+                monthlyCost,
                 renewalDate: renewalDate ? new Date(renewalDate) : null,
-                status: status || 'Ativo',
-                responsible,
-                notes
+                status,
+                responsible: responsible || null,
+                notes: notes || null
             }
         });
 
@@ -57,8 +66,11 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json(license);
-    } catch (error) {
+    } catch (error: any) {
         console.error('[LICENSE_CREATE_ERROR]', error);
+        if (error.name === 'ZodError') {
+            return NextResponse.json({ error: 'Dados inválidos', details: error.errors }, { status: 400 });
+        }
         return NextResponse.json({ error: 'Erro ao criar licença' }, { status: 500 });
     }
 }
