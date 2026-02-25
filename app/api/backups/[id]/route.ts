@@ -37,7 +37,7 @@ export async function DELETE(
         }
 
         // Execution: Atomic deletion of the backup record
-        await prisma.backups.delete({
+        await prisma.backup.delete({
             where: { id }
         });
 

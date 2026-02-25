@@ -48,7 +48,7 @@ async function main() {
     ];
 
     for (const routine of routineData) {
-        await prisma.backups.create({ data: routine });
+        await prisma.backup.create({ data: routine });
     }
 
     console.log('Seed: Backups created');

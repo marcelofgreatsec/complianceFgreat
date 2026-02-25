@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
     try {
-        const backupsList = await prisma.backups.findMany({
+        const backupsList = await prisma.backup.findMany({
             include: { asset: true },
             orderBy: { backupDate: 'desc' }
         });
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { assetId, backupDate, size, status } = body;
 
-        const newBackup = await prisma.backups.create({
+        const newBackup = await prisma.backup.create({
             data: {
                 assetId,
                 backupDate: new Date(backupDate),

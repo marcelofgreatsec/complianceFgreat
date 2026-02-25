@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
     try {
-        const diagrams = await prisma.diagram.findMany({
+        const diagrams = await prisma.infrastructure.findMany({
             orderBy: { updatedAt: 'desc' }
         });
         return NextResponse.json(diagrams);
@@ -23,11 +23,11 @@ export async function POST(req: Request) {
 
         const { id, name, data } = await req.json();
 
-        const diagram = id ? await prisma.diagram.upsert({
+        const diagram = id ? await prisma.infrastructure.upsert({
             where: { id },
             update: { name, data, updatedAt: new Date() },
             create: { name, data }
-        }) : await prisma.diagram.create({
+        }) : await prisma.infrastructure.create({
             data: { name, data }
         });
 
