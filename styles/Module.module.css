@@ -214,3 +214,80 @@
     color: var(--text-secondary);
     font-weight: 600;
 }
+
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    gap: 1rem;
+    color: var(--text-secondary);
+}
+
+.errorBanner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.emptyState h3 {
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.emptyState p {
+    color: var(--text-tertiary);
+    max-width: 400px;
+}
+
+.assetName {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.assetInfo {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-top: 0.25rem;
+}
+
+.actionsCell {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.actionButton {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actionButton:hover {
+    background: var(--surface-2);
+    color: var(--accent-primary);
+}

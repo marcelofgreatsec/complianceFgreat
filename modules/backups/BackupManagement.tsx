@@ -40,10 +40,12 @@ export default function BackupManagement() {
     const { data: routines, error, mutate, isLoading } = useSWR('/api/backups', fetcher);
 
     // Filtering logic
-    const filteredBackups = (routines as any[])?.filter((b: any) =>
-        b.asset?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.status?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    const filteredBackups = Array.isArray(routines)
+        ? routines.filter((b: any) =>
+            b.asset?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            b.status?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : [];
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -137,7 +139,7 @@ export default function BackupManagement() {
             {isLoading ? (
                 <div className={styles.loadingState}>
                     <Loader2 size={32} className="animate-spin" color="var(--accent-primary)" />
-                    <span>Recuperando dados do inventário...</span>
+                    <span>Carregando registros de backups...</span>
                 </div>
             ) : error ? (
                 <div className={styles.errorBanner}>
@@ -146,65 +148,77 @@ export default function BackupManagement() {
                 </div>
             ) : (
                 <div className={styles.tableContainer}>
-                    <table className={styles.table}>
-                        <thead className={styles.thead}>
-                            <tr>
-                                <th className={styles.th}>Ativo Protegido</th>
-                                <th className={styles.th}>Volume de Dados</th>
-                                <th className={styles.th}>Data/Hora do Backup</th>
-                                <th className={styles.th}>Status</th>
-                                <th className={styles.th}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Array.isArray(filteredBackups) && filteredBackups.map((backup: any) => (
-                                <tr key={backup.id} className={styles.tr}>
-                                    <td className={styles.td}>
-                                        <div className={styles.assetName}>{backup.asset?.name || 'Recurso Desconhecido'}</div>
-                                        <div className={styles.assetInfo}>ID Ativo: {backup.assetId}</div>
-                                    </td>
-                                    <td className={styles.td}>{backup.size}</td>
-                                    <td className={styles.td}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <Clock size={12} />
-                                            {backup.backupDate ? new Date(backup.backupDate).toLocaleString('pt-BR') : 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td className={styles.td}>
-                                        <span className={`${styles.statusBadge} ${backup.status === 'Sucesso' ? styles.statusActive :
-                                            backup.status === 'Erro' ? styles.statusDisabled :
-                                                styles.statusMaintenance
-                                            }`}>
-                                            {backup.status === 'Sucesso' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
-                                            {backup.status === 'Erro' && <XCircle size={12} style={{ marginRight: 4 }} />}
-                                            {backup.status === 'Pendente' && <Clock size={12} style={{ marginRight: 4 }} />}
-                                            {backup.status}
-                                        </span>
-                                    </td>
-                                    <td className={styles.td}>
-                                        <div className={styles.actionsCell}>
-                                            <button
-                                                className={styles.actionButton}
-                                                title="Visualizar Detalhes"
-                                                onClick={() => { }}
-                                            >
-                                                <FileText size={16} />
-                                            </button>
-                                            <button
-                                                className={styles.actionButton}
-                                                style={{ color: '#ef4444' }}
-                                                title="Excluir Registro"
-                                                onClick={() => handleDelete(backup.id, backup.asset?.name || backup.id)}
-                                                disabled={isDeleting === backup.id}
-                                            >
-                                                {isDeleting === backup.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                            </button>
-                                        </div>
-                                    </td>
+                    {filteredBackups.length > 0 ? (
+                        <table className={styles.table}>
+                            <thead className={styles.thead}>
+                                <tr>
+                                    <th className={styles.th}>Ativo Protegido</th>
+                                    <th className={styles.th}>Volume de Dados</th>
+                                    <th className={styles.th}>Data/Hora do Backup</th>
+                                    <th className={styles.th}>Status</th>
+                                    <th className={styles.th}>Ações</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {filteredBackups.map((backup: any) => (
+                                    <tr key={backup.id} className={styles.tr}>
+                                        <td className={styles.td}>
+                                            <div className={styles.assetName}>{backup.asset?.name || 'Recurso Desconhecido'}</div>
+                                            <div className={styles.assetInfo}>ID Ativo: {backup.assetId}</div>
+                                        </td>
+                                        <td className={styles.td}>{backup.size}</td>
+                                        <td className={styles.td}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Clock size={12} />
+                                                {backup.backupDate ? new Date(backup.backupDate).toLocaleString('pt-BR') : 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className={styles.td}>
+                                            <span className={`${styles.statusBadge} ${backup.status === 'Sucesso' ? styles.statusActive :
+                                                backup.status === 'Erro' ? styles.statusDisabled :
+                                                    styles.statusMaintenance
+                                                }`}>
+                                                {backup.status === 'Sucesso' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
+                                                {backup.status === 'Erro' && <XCircle size={12} style={{ marginRight: 4 }} />}
+                                                {backup.status === 'Pendente' && <Clock size={12} style={{ marginRight: 4 }} />}
+                                                {backup.status}
+                                            </span>
+                                        </td>
+                                        <td className={styles.td}>
+                                            <div className={styles.actionsCell}>
+                                                <button
+                                                    className={styles.actionButton}
+                                                    title="Visualizar Detalhes"
+                                                    onClick={() => { }}
+                                                >
+                                                    <FileText size={16} />
+                                                </button>
+                                                <button
+                                                    className={styles.actionButton}
+                                                    style={{ color: '#ef4444' }}
+                                                    title="Excluir Registro"
+                                                    onClick={() => handleDelete(backup.id, backup.asset?.name || backup.id)}
+                                                    disabled={isDeleting === backup.id}
+                                                >
+                                                    {isDeleting === backup.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <Database size={48} color="var(--text-tertiary)" />
+                            <h3>Nenhum backup encontrado</h3>
+                            <p>Sua infraestrutura ainda não possui registros de backup neste critério.</p>
+                            <button className={styles.buttonPrimary} style={{ marginTop: '1rem' }} onClick={() => setIsFormOpen(true)}>
+                                <Plus size={18} />
+                                Registrar Primeiro Backup
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
