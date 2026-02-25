@@ -21,13 +21,13 @@ model User {
 model Asset {
   id        String         @id
   name      String
-  type      String
+  type      String         @map("asset_type")
   location  String
   status    String         @default("Ativo")
   ip        String?
   documents String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
   history   AssetHistory[]
   backups   Backup[]
 
@@ -79,15 +79,15 @@ model License {
   name        String
   provider    String
   key         String?
-  totalSeats  Int       @default(1)
-  usedSeats   Int       @default(0)
-  monthlyCost Float     @default(0.0)
-  renewalDate DateTime?
+  totalSeats  Int       @default(1) @map("total_seats")
+  usedSeats   Int       @default(0) @map("used_seats")
+  monthlyCost Float     @default(0.0) @map("monthly_cost")
+  renewalDate DateTime? @map("renewal_date")
   status      String    @default("Ativo")
   responsible String?
   notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("licencas")
 }
