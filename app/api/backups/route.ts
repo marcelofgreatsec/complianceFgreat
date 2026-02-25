@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
-import { BackupSchema } from '@/lib/validators';
-import { rateLimit } from '@/lib/rate-limit';
+import { BackupSchema } from '@/lib/validations/backup-schema';
 import { validateCSRF } from '@/lib/csrf';
 import { log } from '@/lib/audit';
 import { logSecurity } from '@/lib/monitor';
 
 export async function GET(req: Request) {
     try {
-        const ip = req.headers.get('x-forwarded-for') || 'unknown';
-        const { success } = await rateLimit(ip);
-
-        if (!success) {
-            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/backups' } });
-            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-        }
 
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
@@ -36,17 +28,10 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const ip = req.headers.get('x-forwarded-for') || 'unknown';
-        const { success } = await rateLimit(ip);
-
-        if (!success) {
-            logSecurity({ type: 'RATE_LIMIT', severity: 'HIGH', details: { ip, route: '/api/backups' } });
-            return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-        }
 
         const token = req.headers.get('x-csrf-token');
         if (!token || !(await validateCSRF(token))) {
-            logSecurity({ type: 'CSRF_FAILED', severity: 'CRITICAL', details: { ip, route: '/api/backups' } });
+            logSecurity({ type: 'CSRF_FAILED', severity: 'CRITICAL', details: { ip: req.headers.get('x-forwarded-for') || 'unknown', route: '/api/backups' } });
             return NextResponse.json({ error: 'Invalid CSRF' }, { status: 403 });
         }
 

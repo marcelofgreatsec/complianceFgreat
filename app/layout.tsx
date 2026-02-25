@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '../hooks/use-theme';
 import { Providers } from '../components/Providers';
+import { SessionWatcher } from '../components/SessionWatcher';
 import '../styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <Providers>
+            <SessionWatcher />
             {children}
           </Providers>
         </ThemeProvider>
