@@ -40,9 +40,9 @@ export default function BackupManagement() {
     const { data: routines, error, mutate, isLoading } = useSWR('/api/backups', fetcher);
 
     // Filtering logic
-    const filteredRoutines = routines?.filter((r: any) =>
-        r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.responsible?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredBackups = (routines as any[])?.filter((b: any) =>
+        b.asset?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.status?.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -149,66 +149,55 @@ export default function BackupManagement() {
                     <table className={styles.table}>
                         <thead className={styles.thead}>
                             <tr>
-                                <th className={styles.th}>Rotina de Segurança</th>
-                                <th className={styles.th}>Arquitetura</th>
-                                <th className={styles.th}>Intervalo</th>
-                                <th className={styles.th}>Última Validação</th>
-                                <th className={styles.th}>Conformidade</th>
-                                <th className={styles.th}>Controle</th>
+                                <th className={styles.th}>Ativo Protegido</th>
+                                <th className={styles.th}>Volume de Dados</th>
+                                <th className={styles.th}>Data/Hora do Backup</th>
+                                <th className={styles.th}>Status</th>
+                                <th className={styles.th}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {Array.isArray(filteredRoutines) && filteredRoutines.map((routine: any) => (
-                                <tr key={routine.id} className={styles.tr}>
+                            {Array.isArray(filteredBackups) && filteredBackups.map((backup: any) => (
+                                <tr key={backup.id} className={styles.tr}>
                                     <td className={styles.td}>
-                                        <div className={styles.assetName}>{routine.name}</div>
-                                        <div className={styles.assetInfo}>Responsável: {routine.responsible}</div>
+                                        <div className={styles.assetName}>{backup.asset?.name || 'Recurso Desconhecido'}</div>
+                                        <div className={styles.assetInfo}>ID Ativo: {backup.assetId}</div>
                                     </td>
-                                    <td className={styles.td}>{routine.type}</td>
-                                    <td className={styles.td}>{routine.frequency}</td>
+                                    <td className={styles.td}>{backup.size}</td>
                                     <td className={styles.td}>
-                                        {routine.logs?.[0] ? (
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <Clock size={12} />
-                                                {new Date(routine.logs[0].timestamp).toLocaleString('pt-BR')}
-                                            </span>
-                                        ) : 'Sem registros'}
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Clock size={12} />
+                                            {backup.backupDate ? new Date(backup.backupDate).toLocaleString('pt-BR') : 'N/A'}
+                                        </span>
                                     </td>
                                     <td className={styles.td}>
-                                        <span className={`${styles.statusBadge} ${routine.status === 'Sucesso' ? styles.statusActive :
-                                            routine.status === 'Erro' ? styles.statusDisabled :
+                                        <span className={`${styles.statusBadge} ${backup.status === 'Sucesso' ? styles.statusActive :
+                                            backup.status === 'Erro' ? styles.statusDisabled :
                                                 styles.statusMaintenance
                                             }`}>
-                                            {routine.status === 'Sucesso' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
-                                            {routine.status === 'Erro' && <XCircle size={12} style={{ marginRight: 4 }} />}
-                                            {routine.status === 'Pendente' && <Clock size={12} style={{ marginRight: 4 }} />}
-                                            {routine.status}
+                                            {backup.status === 'Sucesso' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
+                                            {backup.status === 'Erro' && <XCircle size={12} style={{ marginRight: 4 }} />}
+                                            {backup.status === 'Pendente' && <Clock size={12} style={{ marginRight: 4 }} />}
+                                            {backup.status}
                                         </span>
                                     </td>
                                     <td className={styles.td}>
                                         <div className={styles.actionsCell}>
                                             <button
                                                 className={styles.actionButton}
-                                                title="Forçar Execução"
-                                                onClick={() => handleExecute(routine.id, routine.name)}
-                                                disabled={isExecuting === routine.id || isDeleting === routine.id}
+                                                title="Visualizar Detalhes"
+                                                onClick={() => { }}
                                             >
-                                                {isExecuting === routine.id ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                                            </button>
-                                            <button className={styles.actionButton} title="Relatório de Logs">
                                                 <FileText size={16} />
-                                            </button>
-                                            <button className={styles.actionButton} title="Parâmetros">
-                                                <Database size={16} />
                                             </button>
                                             <button
                                                 className={styles.actionButton}
                                                 style={{ color: '#ef4444' }}
-                                                title="Excluir Rotina"
-                                                onClick={() => handleDelete(routine.id, routine.name)}
-                                                disabled={isDeleting === routine.id || isExecuting === routine.id}
+                                                title="Excluir Registro"
+                                                onClick={() => handleDelete(backup.id, backup.asset?.name || backup.id)}
+                                                disabled={isDeleting === backup.id}
                                             >
-                                                {isDeleting === routine.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                                {isDeleting === backup.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                                             </button>
                                         </div>
                                     </td>

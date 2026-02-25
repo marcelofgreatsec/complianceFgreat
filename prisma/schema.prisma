@@ -8,44 +8,57 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String?
-  email     String?  @unique
+  email     String?    @unique
   password  String
-  role      String   @default("VIEWER") // ADMIN, TI, VIEWER
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String     @default("VIEWER")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   logs      AuditLog[]
 }
 
 model Asset {
-  id          String         @id
-  name        String
-  type        String
-  location    String
-  status      String         @default("Ativo") // Ativo, Manutenção, Desativado
-  ip          String?
-  documents   String?        // JSON stringified list of document links
-  history     AssetHistory[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id        String         @id
+  name      String
+  type      String
+  location  String
+  status    String         @default("Ativo")
+  ip        String?
+  documents String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  history   AssetHistory[]
+  backups   Backup[]
 }
 
 model AssetHistory {
   id        String   @id @default(cuid())
   assetId   String
-  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
   action    String
   details   String?
   timestamp DateTime @default(now())
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+model Backup {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  assetId    String   @map("asset_id")
+  asset      Asset    @relation(fields: [assetId], references: [id])
+  backupDate DateTime @map("backup_date")
+  size       String
+  status     String   // Sucesso, Erro, Pendente
+
+  @@map("backups")
 }
 
 model BackupRoutine {
   id          String      @id @default(cuid())
   name        String
-  type        String      // Nuvem, Local, Híbrido
+  type        String
   frequency   String
-  status      String      @default("Pendente") // Sucesso, Erro, Pendente
+  status      String      @default("Pendente")
   responsible String
   lastRun     DateTime?
   createdAt   DateTime    @default(now())
@@ -56,17 +69,17 @@ model BackupRoutine {
 model BackupLog {
   id        String        @id @default(cuid())
   routineId String
-  routine   BackupRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
   status    String
-  evidence  String?       // Link to evidence file or text
+  evidence  String?
   logOutput String?
   timestamp DateTime      @default(now())
+  routine   BackupRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
 }
 
 model Diagram {
   id        String   @id @default(cuid())
   name      String
-  data      String   // JSON stringified Konva stage state
+  data      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -74,31 +87,27 @@ model Diagram {
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
   action    String
   resource  String
   timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
 }
-
-// ── License Management Module ─────────────────────────────────────────────
 
 model License {
-  id           String   @id @default(cuid())
-  name         String
-  provider     String
-  key          String?  // Encrypted or sensitive
-  totalSeats   Int      @default(1)
-  usedSeats    Int      @default(0)
-  monthlyCost  Float    @default(0.0)
-  renewalDate  DateTime?
-  status       String   @default("Ativo") // Ativo, Expirado, Cancelado
-  responsible  String?
-  notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String    @id @default(cuid())
+  name        String
+  provider    String
+  key         String?
+  totalSeats  Int       @default(1)
+  usedSeats   Int       @default(0)
+  monthlyCost Float     @default(0.0)
+  renewalDate DateTime?
+  status      String    @default("Ativo")
+  responsible String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
-
-// ── Documentation Module ─────────────────────────────────────────────────
 
 model DocCategory {
   id        String     @id @default(cuid())
@@ -109,31 +118,30 @@ model DocCategory {
 }
 
 model Document {
-  id           String       @id @default(cuid())
-  title        String
-  categoryId   String
-  category     DocCategory  @relation(fields: [categoryId], references: [id])
-  type         String       // Documento, Link, Credencial, Procedimento
-  description  String?
-  tags         String?      // comma-separated
-  content      String?      // URL for Link, text content for others
-  fileUrl      String?      // path to uploaded file
-  fileType     String?      // pdf, docx, txt
-  // Credential fields
-  credUser     String?
-  credPass     String?      // bcrypt encrypted
-  responsible  String?
-  createdBy    String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  accessLogs   DocAccessLog[]
+  id          String         @id @default(cuid())
+  title       String
+  categoryId  String
+  type        String
+  description String?
+  tags        String?
+  content     String?
+  fileUrl     String?
+  fileType    String?
+  credUser    String?
+  credPass    String?
+  responsible String?
+  createdBy   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  accessLogs  DocAccessLog[]
+  category    DocCategory    @relation(fields: [categoryId], references: [id])
 }
 
 model DocAccessLog {
   id         String   @id @default(cuid())
   documentId String
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   userId     String?
-  action     String   // VIEW, EDIT, DELETE, VIEW_CREDENTIAL
+  action     String
   timestamp  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }

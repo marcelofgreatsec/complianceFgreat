@@ -8,10 +8,10 @@ import { X, Loader2, Save } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
 
 const routineSchema = z.object({
-    name: z.string().min(2, 'Nome é obrigatório'),
-    type: z.string().min(1, 'Tipo é obrigatório'),
-    frequency: z.string().min(1, 'Frequência é obrigatória'),
-    responsible: z.string().min(1, 'Responsável é obrigatório'),
+    assetId: z.string().min(1, 'ID do Ativo é obrigatório'),
+    backupDate: z.string().min(1, 'Data do backup é obrigatória'),
+    size: z.string().min(1, 'Tamanho é obrigatório'),
+    status: z.string().min(1, 'Status é obrigatório'),
 });
 
 type RoutineFormValues = z.infer<typeof routineSchema>;
@@ -64,32 +64,32 @@ export default function RoutineForm({ onClose, onSuccess }: RoutineFormProps) {
 
                     <div className={styles.formGrid}>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Nome da Rotina/Sistema</label>
-                            <input {...register('name')} className={styles.input} placeholder="Ex: Backup Diário - SQL Prod" />
-                            {errors.name && <span className={styles.fieldError}>{errors.name.message}</span>}
+                            <label className={styles.label}>ID do Ativo</label>
+                            <input {...register('assetId')} className={styles.input} placeholder="Ex: AST-001" />
+                            {errors.assetId && <span className={styles.fieldError}>{errors.assetId.message}</span>}
                         </div>
 
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Tipo de Backup</label>
-                            <select {...register('type')} className={styles.input}>
+                            <label className={styles.label}>Data do Backup</label>
+                            <input type="datetime-local" {...register('backupDate')} className={styles.input} />
+                            {errors.backupDate && <span className={styles.fieldError}>{errors.backupDate.message}</span>}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Tamanho</label>
+                            <input {...register('size')} className={styles.input} placeholder="Ex: 50GB" />
+                            {errors.size && <span className={styles.fieldError}>{errors.size.message}</span>}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Status</label>
+                            <select {...register('status')} className={styles.input}>
                                 <option value="">Selecione...</option>
-                                <option value="Nuvem">Nuvem</option>
-                                <option value="Local">Local</option>
-                                <option value="Híbrido">Híbrido</option>
+                                <option value="Sucesso">Sucesso</option>
+                                <option value="Erro">Erro</option>
+                                <option value="Pendente">Pendente</option>
                             </select>
-                            {errors.type && <span className={styles.fieldError}>{errors.type.message}</span>}
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.label}>Frequência</label>
-                            <input {...register('frequency')} className={styles.input} placeholder="Ex: Diário (02:00)" />
-                            {errors.frequency && <span className={styles.fieldError}>{errors.frequency.message}</span>}
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.label}>Responsável</label>
-                            <input {...register('responsible')} className={styles.input} placeholder="Ex: João Silva" />
-                            {errors.responsible && <span className={styles.fieldError}>{errors.responsible.message}</span>}
+                            {errors.status && <span className={styles.fieldError}>{errors.status.message}</span>}
                         </div>
                     </div>
 

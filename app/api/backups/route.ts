@@ -4,11 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
     try {
-        const routines = await prisma.backupRoutine.findMany({
-            include: { logs: { orderBy: { timestamp: 'desc' }, take: 1 } },
-            orderBy: { updatedAt: 'desc' }
+        const backups = await prisma.backup.findMany({
+            include: { asset: true },
+            orderBy: { backupDate: 'desc' }
         });
-        return NextResponse.json(routines);
+        return NextResponse.json(backups);
     } catch (error) {
         return NextResponse.json({ error: 'Erro ao buscar rotinas' }, { status: 500 });
     }
@@ -23,13 +23,18 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { name, type, frequency, responsible } = body;
+        const { assetId, backupDate, size, status } = body;
 
-        const routine = await prisma.backupRoutine.create({
-            data: { name, type, frequency, responsible, status: 'Pendente' }
+        const backup = await prisma.backup.create({
+            data: {
+                assetId,
+                backupDate: new Date(backupDate),
+                size,
+                status: status || 'Pendente'
+            }
         });
 
-        return NextResponse.json(routine);
+        return NextResponse.json(backup);
     } catch (error) {
         return NextResponse.json({ error: 'Erro ao criar rotina' }, { status: 500 });
     }
