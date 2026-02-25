@@ -3,7 +3,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { rateLimitCheck } from '@/lib/rate-limit'
 import { logSecurity } from '@/lib/monitor'
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 export async function middleware(request: NextRequest) {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+        return NextResponse.next()
+    }
+
     if (request.nextUrl.pathname.startsWith('/api')) {
         const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
         const { success } = await rateLimitCheck(ip, request.nextUrl.pathname)
