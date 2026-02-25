@@ -42,16 +42,16 @@ async function main() {
 
     // 3. Create Initial Backup Routines
     const routineData = [
-        { name: 'Backup Diário - SQL Prod', type: 'Nuvem', frequency: 'Diário (02:00)', status: 'Sucesso', responsible: 'João Silva' },
-        { name: 'Arquivos - Storage Local', type: 'Local', frequency: 'Horário', status: 'Sucesso', responsible: 'Sistema' },
-        { name: 'Offsite - S3 Mirror', type: 'Híbrido', frequency: 'Semanal', status: 'Erro', responsible: 'Maria Souza' },
+        { assetId: 'AST-001', backupDate: new Date(), size: '50GB', status: 'Sucesso' },
+        { assetId: 'AST-004', backupDate: new Date(), size: '120GB', status: 'Sucesso' },
+        { assetId: 'AST-006', backupDate: new Date(), size: '500GB', status: 'Erro' },
     ];
 
     for (const routine of routineData) {
-        await prisma.backupRoutine.create({ data: routine });
+        await prisma.backups.create({ data: routine });
     }
 
-    console.log('Seed: Backup routines created');
+    console.log('Seed: Backups created');
 }
 
 main()

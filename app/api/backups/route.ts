@@ -4,13 +4,13 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
     try {
-        const backups = await prisma.backup.findMany({
+        const backupsList = await prisma.backups.findMany({
             include: { asset: true },
             orderBy: { backupDate: 'desc' }
         });
-        return NextResponse.json(backups);
+        return NextResponse.json(backupsList);
     } catch (error) {
-        return NextResponse.json({ error: 'Erro ao buscar rotinas' }, { status: 500 });
+        return NextResponse.json({ error: 'Erro ao buscar backups' }, { status: 500 });
     }
 }
 
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { assetId, backupDate, size, status } = body;
 
-        const backup = await prisma.backup.create({
+        const newBackup = await prisma.backups.create({
             data: {
                 assetId,
                 backupDate: new Date(backupDate),
@@ -34,8 +34,8 @@ export async function POST(req: Request) {
             }
         });
 
-        return NextResponse.json(backup);
+        return NextResponse.json(newBackup);
     } catch (error) {
-        return NextResponse.json({ error: 'Erro ao criar rotina' }, { status: 500 });
+        return NextResponse.json({ error: 'Erro ao criar registro de backup' }, { status: 500 });
     }
 }

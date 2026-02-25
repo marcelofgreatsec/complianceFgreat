@@ -29,7 +29,7 @@ model Asset {
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
   history   AssetHistory[]
-  backups   Backup[]
+  backups   backups[]
 }
 
 model AssetHistory {
@@ -41,7 +41,7 @@ model AssetHistory {
   asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
 }
 
-model Backup {
+model backups {
   id         String   @id @default(cuid())
   createdAt  DateTime @default(now()) @map("created_at")
   assetId    String   @map("asset_id")
@@ -49,31 +49,6 @@ model Backup {
   backupDate DateTime @map("backup_date")
   size       String
   status     String   // Sucesso, Erro, Pendente
-
-  @@map("backups")
-}
-
-model BackupRoutine {
-  id          String      @id @default(cuid())
-  name        String
-  type        String
-  frequency   String
-  status      String      @default("Pendente")
-  responsible String
-  lastRun     DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  logs        BackupLog[]
-}
-
-model BackupLog {
-  id        String        @id @default(cuid())
-  routineId String
-  status    String
-  evidence  String?
-  logOutput String?
-  timestamp DateTime      @default(now())
-  routine   BackupRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
 }
 
 model Diagram {

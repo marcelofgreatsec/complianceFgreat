@@ -36,13 +36,12 @@ export async function DELETE(
             );
         }
 
-        // Execution: Atomic deletion of the routine
-        // Associated logs are automatically deleted due to "onDelete: Cascade" in schema.prisma
-        await prisma.backupRoutine.delete({
+        // Execution: Atomic deletion of the backup record
+        await prisma.backups.delete({
             where: { id }
         });
 
-        return NextResponse.json({ message: 'Rotina de backup excluída com sucesso.' });
+        return NextResponse.json({ message: 'Registro de backup excluído com sucesso.' });
     } catch (error) {
         console.error('[BACKUP_DELETE_ERROR] Critical failure:', error);
         return NextResponse.json(
