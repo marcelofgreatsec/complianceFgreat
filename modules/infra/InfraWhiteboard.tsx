@@ -1,25 +1,21 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import {
     MousePointer2,
-    Move,
     ArrowUpRight,
-    Square,
-    Circle,
     Type,
-    Plus,
     Save,
     Trash2,
-    ZoomIn,
-    ZoomOut,
     Server,
     Shield,
     Cloud,
     Network,
     Loader2,
     Undo2,
-    Layout,
+    Database,
+    Cpu,
+    Box,
     HandIcon
 } from 'lucide-react';
 import styles from './InfraWhiteboard.module.css';
@@ -59,12 +55,18 @@ export default function InfraWhiteboard() {
         const newElement = {
             id: Date.now().toString(),
             type,
-            x: 100,
-            y: 100,
+            x: 150,
+            y: 150,
             width: 140,
-            height: 90,
-            fill: 'var(--accent-primary)',
+            height: 60,
+            fill: type === 'server' ? '#0070d1' :
+                type === 'database' ? '#f59e0b' :
+                    type === 'firewall' ? '#ef4444' :
+                        type === 'cloud' ? '#8b5cf6' : '#0070d1',
             text: type.toUpperCase(),
+            subtext: type === 'server' ? 'Servidor v1' :
+                type === 'database' ? 'PostgreSQL' :
+                    type === 'firewall' ? 'WAF/Firewall' : 'Novo Recurso',
         };
         setElements([...elements, newElement]);
     };
@@ -91,8 +93,8 @@ export default function InfraWhiteboard() {
         <div className={styles.container}>
             <div className={styles.header}>
                 <div className={styles.info}>
-                    <h2 className={styles.title}>Mapa de Infraestrutura</h2>
-                    <p className={styles.subtitle}>Desenhe e conecte sua infraestrutura interna</p>
+                    <h2 className={styles.title}>Arquitetura de Infraestrutura</h2>
+                    <p className={styles.subtitle}>Gerencie e documente seus ativos de rede visualmente</p>
                 </div>
                 <div className={styles.actions}>
                     <button className={styles.actionBtn} onClick={() => setElements([])}>
@@ -100,7 +102,7 @@ export default function InfraWhiteboard() {
                     </button>
                     <button className={`${styles.actionBtn} ${styles.primary}`} onClick={saveDiagram} disabled={isSaving}>
                         {isSaving ? <Loader2 size={18} className={styles.spin} /> : <Save size={18} />}
-                        Salvar Mapa
+                        Salvar Alterações
                     </button>
                 </div>
             </div>
@@ -118,14 +120,14 @@ export default function InfraWhiteboard() {
                         <button
                             className={`${styles.tool} ${selectedTool === 'hand' ? styles.toolActive : ''}`}
                             onClick={() => setSelectedTool('hand')}
-                            title="Mão (Mover Mapa)"
+                            title="Mão"
                         >
                             <HandIcon size={20} />
                         </button>
                         <button
                             className={`${styles.tool} ${selectedTool === 'arrow' ? styles.toolActive : ''}`}
                             onClick={() => setSelectedTool('arrow')}
-                            title="Seta (Conexão)"
+                            title="Conexão"
                         >
                             <ArrowUpRight size={20} />
                         </button>
@@ -135,20 +137,21 @@ export default function InfraWhiteboard() {
 
                     <div className={styles.toolGroup}>
                         <button className={styles.tool} onClick={() => addElement('server')} title="Servidor"><Server size={20} /></button>
+                        <button className={styles.tool} onClick={() => addElement('database')} title="Banco de Dados"><Database size={20} /></button>
                         <button className={styles.tool} onClick={() => addElement('firewall')} title="Firewall"><Shield size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('switch')} title="Switch"><Network size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('cloud')} title="Cloud"><Cloud size={20} /></button>
+                        <button className={styles.tool} onClick={() => addElement('loadbalancer')} title="Load Balancer"><Cpu size={20} /></button>
+                        <button className={styles.tool} onClick={() => addElement('cloud')} title="Cloud/SaaS"><Cloud size={20} /></button>
+                        <button className={styles.tool} onClick={() => addElement('rect')} title="Container"><Box size={20} /></button>
                     </div>
 
                     <div className={styles.divider} />
 
                     <div className={styles.toolGroup}>
-                        <button className={styles.tool} onClick={() => addElement('rect')} title="Bloco"><Layout size={20} /></button>
                         <button className={styles.tool} onClick={() => addElement('text')} title="Texto"><Type size={20} /></button>
                     </div>
                 </div>
 
-                <div className={styles.canvasContainer} data-tool={selectedTool}>
+                <div id="canvas-parent" className={styles.canvasContainer} data-tool={selectedTool}>
                     <Canvas
                         elements={elements}
                         setElements={setElements}
