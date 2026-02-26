@@ -16,15 +16,16 @@ export async function DELETE(
 ) {
     try {
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        // const { data: { user } } = await supabase.auth.getUser();
 
-        // Rigorous Security Check
-        if (!user || !['ADMIN', 'TI'].includes(user.user_metadata?.role)) {
-            return NextResponse.json(
-                { error: 'Acesso negado. Privilégios insuficientes para excluir rotinas.' },
-                { status: 403 }
-            );
-        }
+        // // Rigorous Security Check
+        // if (!user || !['ADMIN', 'TI'].includes(user.user_metadata?.role)) {
+        //     return NextResponse.json(
+        //         { error: 'Acesso negado. Privilégios insuficientes para excluir rotinas.' },
+        //         { status: 403 }
+        //     );
+        // }
+
 
         // Await params for Next.js 15+ compatibility
         const { id } = await context.params;

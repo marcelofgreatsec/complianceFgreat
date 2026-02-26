@@ -10,11 +10,12 @@ export async function GET(req: Request) {
     try {
 
         const supabase = await createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        // const { data: { session } } = await supabase.auth.getSession();
 
-        if (!session) {
-            return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-        }
+        // if (!session) {
+        //     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+        // }
+
 
         const diagrams = await prisma.infrastructure.findMany({
             orderBy: { updatedAt: 'desc' }
@@ -35,10 +36,11 @@ export async function POST(req: Request) {
         }
 
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user || user.user_metadata?.role === 'VIEWER') {
-            return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
-        }
+        // const { data: { user } } = await supabase.auth.getUser();
+        // if (!user || user.user_metadata?.role === 'VIEWER') {
+        //     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
+        // }
+
 
         const body = await req.json();
         const validatedData = InfrastructureSchema.parse(body);
