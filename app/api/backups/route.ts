@@ -9,7 +9,7 @@ import { logSecurity } from '@/lib/monitor';
 export async function GET(req: Request) {
     try {
 
-        const supabase = await createClient();
+        // const supabase = await createClient();
         // const { data: { session } } = await supabase.auth.getSession();
 
         // if (!session) {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid CSRF' }, { status: 403 });
         }
 
-        const supabase = await createClient();
+        // const supabase = await createClient();
         // const { data: { user } } = await supabase.auth.getUser();
         // if (!user || user.user_metadata?.role === 'VIEWER') {
         //     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
