@@ -1,7 +1,6 @@
-// Deprecated middleware to prevent Vercel ERR_CONNECTION_TIMED_OUT
-// This simplified version avoids hanging on edge functions when environment variables are missing.
+// Middleware desabilitado temporariamente para garantir conectividade total
+/*
 import { NextResponse } from 'next/server'
-
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
@@ -12,5 +11,6 @@ export function middleware(request: NextRequest) {
 export const config = {
     matcher: ['/api/:path*'], // Apenas em APIs
 }
-
-
+*/
+export function middleware() { }
+export const config = { matcher: [] }
