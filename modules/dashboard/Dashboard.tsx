@@ -125,45 +125,55 @@ export default function Dashboard() {
     const heatmap = useMemo(() => generateHeatmap(), []);
 
     const stats = useMemo(() => {
-        const total = assets?.length ?? 0;
-        const critical = assets?.filter((a: any) => a.status === 'Desativado').length ?? 0;
-        const ok = routines?.filter((r: any) => r.status === 'Sucesso').length ?? 0;
-        const totalR = routines?.length ?? 0;
+        const total = Array.isArray(assets) ? assets.length : 0;
+        const critical = Array.isArray(assets) ? assets.filter((a: any) => a.status === 'Desativado').length : 0;
+        const ok = Array.isArray(routines) ? routines.filter((r: any) => r.status === 'Sucesso').length : 0;
+        const totalR = Array.isArray(routines) ? routines.length : 0;
         const compliance = totalR > 0 ? Math.round((ok / totalR) * 100) : 0;
 
-        const licenseCost = licenses?.reduce((acc: number, l: any) => acc + (l.monthlyCost || 0), 0) || 0;
+        const licenseCost = Array.isArray(licenses) ? licenses.reduce((acc: number, l: any) => acc + (l.monthlyCost || 0), 0) : 0;
 
         return { total, critical, ok, compliance, licenseCost };
     }, [assets, routines, licenses]);
 
     const pieData = useMemo(() => {
         const counts: Record<string, number> = { Ativo: 0, Manutenção: 0, Desativado: 0 };
-        assets?.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
+        if (Array.isArray(assets)) {
+            assets.forEach((a: any) => { if (counts[a.status] !== undefined) counts[a.status]++; });
+        }
         return Object.entries(counts).map(([name, value]) => ({ name, value }));
     }, [assets]);
 
+
     const alerts = useMemo(() => {
         const list: any[] = [];
-        routines?.filter((r: any) => r.status === 'Erro').forEach((r: any) =>
-            list.push({ icon: XCircle, text: `Falha crítica: ${r.name}`, severity: 'critical' })
-        );
-        assets?.filter((a: any) => a.status === 'Desativado').forEach((a: any) =>
-            list.push({ icon: AlertTriangle, text: `Ativo offline: ${a.name}`, severity: 'critical' })
-        );
+        if (Array.isArray(routines)) {
+            routines.filter((r: any) => r.status === 'Erro').forEach((r: any) =>
+                list.push({ icon: XCircle, text: `Falha crítica: ${r.name}`, severity: 'critical' })
+            );
+        }
+        if (Array.isArray(assets)) {
+            assets.filter((a: any) => a.status === 'Desativado').forEach((a: any) =>
+                list.push({ icon: AlertTriangle, text: `Ativo offline: ${a.name}`, severity: 'critical' })
+            );
+        }
 
         // License renewal alerts
-        const now = new Date();
-        const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
-        licenses?.filter((l: any) => {
-            if (!l.renewalDate) return false;
-            const rDate = new Date(l.renewalDate);
-            return rDate > now && rDate <= thirtyDaysFromNow;
-        }).forEach((l: any) => {
-            list.push({ icon: Clock, text: `Licença a vencer: ${l.name}`, severity: 'warning' });
-        });
+        if (Array.isArray(licenses)) {
+            const now = new Date();
+            const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+            licenses.filter((l: any) => {
+                if (!l.renewalDate) return false;
+                const rDate = new Date(l.renewalDate);
+                return rDate > now && rDate <= thirtyDaysFromNow;
+            }).forEach((l: any) => {
+                list.push({ icon: Clock, text: `Licença a vencer: ${l.name}`, severity: 'warning' });
+            });
+        }
 
         return list;
     }, [assets, routines, licenses]);
+
 
     return (
         <div className={styles.page}>
@@ -315,15 +325,16 @@ export default function Dashboard() {
                     </div>
                     <div className={styles.infraSimpleGrid}>
                         {[
-                            { label: 'Servidores', icon: Server, val: assets?.filter((a: any) => a.type === 'Servidor').length ?? 0 },
-                            { label: 'Rede', icon: Wifi, val: assets?.filter((a: any) => a.type === 'Rede').length ?? 0 },
-                            { label: 'Storage', icon: HardDrive, val: assets?.filter((a: any) => a.type === 'Storage').length ?? 0 },
+                            { label: 'Servidores', icon: Server, val: (Array.isArray(assets) ? assets.filter((a: any) => a.type === 'Servidor').length : 0) },
+                            { label: 'Rede', icon: Wifi, val: (Array.isArray(assets) ? assets.filter((a: any) => a.type === 'Rede').length : 0) },
+                            { label: 'Storage', icon: HardDrive, val: (Array.isArray(assets) ? assets.filter((a: any) => a.type === 'Storage').length : 0) },
                         ].map(item => (
                             <div key={item.label} className={styles.infraSimpleItem}>
                                 <item.icon size={16} />
                                 <span>{item.label}: <strong>{item.val}</strong></span>
                             </div>
                         ))}
+
                     </div>
                 </article>
             </div>

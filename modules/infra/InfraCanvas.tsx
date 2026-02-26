@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+
 import { Stage, Layer, Rect, Circle, Text, Group, Arrow } from 'react-konva';
 
 interface CanvasProps {
@@ -12,6 +13,21 @@ interface CanvasProps {
 export default function InfraCanvas({ elements, setElements, selectedTool }: CanvasProps) {
     const [isDrawing, setIsDrawing] = useState(false);
     const stageRef = useRef<any>(null);
+    const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
+
+    useEffect(() => {
+        const updateSize = () => {
+            setDimensions({
+                width: window.innerWidth - 320,
+                height: window.innerHeight - 200
+            });
+        };
+        updateSize();
+        window.addEventListener('resize', updateSize);
+        return () => window.removeEventListener('resize', updateSize);
+    }, []);
+
+
 
     const handleDragEnd = (e: any, id: string) => {
         setElements(elements.map(el => {
@@ -67,8 +83,9 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
     return (
         <Stage
             ref={stageRef}
-            width={window.innerWidth - 320}
-            height={window.innerHeight - 200}
+            width={dimensions.width}
+            height={dimensions.height}
+
             draggable={selectedTool === 'hand'}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}

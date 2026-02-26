@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@/lib/supabase/client';
+
 
 export function SessionWatcher() {
     const router = useRouter();
@@ -12,10 +13,8 @@ export function SessionWatcher() {
         if (pathname === '/login') return;
 
         let timeoutId: NodeJS.Timeout;
-        const supabase = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        const supabase = createClient();
+
 
         const logoutUser = async () => {
             await supabase.auth.signOut();

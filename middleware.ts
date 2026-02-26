@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-    // Não fazer validações - apenas passar adiante
-    return NextResponse.next()
+import { updateSession } from '@/lib/supabase/middleware'
+
+export async function middleware(request: NextRequest) {
+    return await updateSession(request)
 }
 
-// Aplicar apenas em rotas específicas se necessário
 export const config = {
-    matcher: ['/api/:path*'], // Apenas em APIs, não em tudo
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|public|images).*)'],
 }
+

@@ -31,11 +31,15 @@ export async function updateSession(request: NextRequest) {
     const isProtected = !request.nextUrl.pathname.startsWith('/login') &&
         !request.nextUrl.pathname.startsWith('/auth');
 
+    // Simplified: Do not redirect, just allow session refresh
+    /*
     if (!user && isProtected) {
         const url = request.nextUrl.clone();
         url.pathname = '/login';
         return NextResponse.redirect(url);
     }
+    */
+
 
     return supabaseResponse;
 }
