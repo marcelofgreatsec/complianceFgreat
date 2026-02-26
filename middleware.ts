@@ -1,4 +1,7 @@
+// Deprecated middleware to prevent Vercel ERR_CONNECTION_TIMED_OUT
+// This simplified version avoids hanging on edge functions when environment variables are missing.
 import { NextResponse } from 'next/server'
+
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
