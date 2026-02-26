@@ -8,6 +8,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
         const { id } = await context.params;
         const supabase = await createClient();
         // const { data: { user } } = await supabase.auth.getUser();
+        const user = { id: 'temp-build-id' };
+
 
         const doc = await prisma.document.findUnique({
             where: { id },
