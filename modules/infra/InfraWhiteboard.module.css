@@ -141,16 +141,10 @@
     background-size: 30px 30px;
 }
 
-.canvasContainer[data-tool="hand"] {
-    cursor: grab;
-}
-
-.canvasContainer[data-tool="hand"]:active {
-    cursor: grabbing;
-}
-
-.canvasContainer[data-tool="arrow"] {
-    cursor: crosshair;
+.tool.danger:hover {
+    background: rgba(255, 77, 77, 0.15);
+    color: #ff4d4d !important;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
 }
 
 .loadingState {

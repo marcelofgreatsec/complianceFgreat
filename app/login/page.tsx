@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import styles from '@/styles/Login.module.css';
+import FgreatLogo from '@/components/branding/FgreatLogo';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -73,11 +74,7 @@ export default function LoginPage() {
             <div className={`${styles.loginCard} ${mounted ? styles.mounted : ''}`}>
                 {/* Logo */}
                 <div className={styles.logoWrapper}>
-                    <div className={styles.logoIcon}>
-                        <ShieldCheck size={28} />
-                    </div>
-                    <span className={styles.logoName}>Fgreat</span>
-                    <span className={styles.logoBadge}>IT</span>
+                    <FgreatLogo size={42} />
                 </div>
 
                 {/* Header */}

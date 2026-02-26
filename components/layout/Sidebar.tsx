@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import FgreatLogo from '../branding/FgreatLogo';
 import {
     LayoutDashboard,
     Box,
@@ -55,10 +56,7 @@ export default function Sidebar() {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.logoContainer}>
-                <div className={styles.iconBox}>
-                    <LayoutDashboard size={20} />
-                </div>
-                <span className={styles.logoText}>Fgreat</span>
+                <FgreatLogo size={32} />
             </div>
 
             <nav className={styles.nav}>

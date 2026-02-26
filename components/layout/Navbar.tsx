@@ -5,6 +5,7 @@ import { Bell, Moon, Sun, Search, LayoutGrid, X } from 'lucide-react';
 import { useTheme } from '../../hooks/use-theme';
 import styles from './Navbar.module.css';
 import { usePathname } from 'next/navigation';
+import FgreatLogo from '../branding/FgreatLogo';
 
 export default function Navbar() {
     const themeContext = useTheme();
@@ -31,7 +32,10 @@ export default function Navbar() {
         <header className={styles.navbar}>
             <div className={styles.titleContainer}>
                 <h1 className={styles.pageTitle}>{getPageTitle(pathname)}</h1>
-                <span className={styles.breadcrumb}>Fgreat / {getPageTitle(pathname)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FgreatLogo size={18} showText={false} />
+                    <span className={styles.breadcrumb}>/ {getPageTitle(pathname)}</span>
+                </div>
             </div>
 
             <div className={styles.actions}>

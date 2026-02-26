@@ -20,8 +20,8 @@ export function generateHistory(days: number) {
 
         data.push({
             date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-            ok: Math.floor(Math.random() * 8) + 12, // Stable success rate
-            falha: Math.floor(Math.random() * 2),   // Minimal failures
+            ok: 0,
+            falha: 0,
         });
     }
     return data;
@@ -38,7 +38,7 @@ export function generateHeatmap() {
         day,
         hours: HOURS.map((hour) => ({
             hour,
-            value: Math.floor(Math.random() * 6),
+            value: 0,
         })),
     }));
 }

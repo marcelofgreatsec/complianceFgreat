@@ -60,24 +60,45 @@ export default function InfraWhiteboard() {
     }, [diagrams]);
 
     const addElement = (type: string) => {
-        const nextX = lastPos.x + 40 > 800 ? 100 : lastPos.x + 40;
-        const nextY = lastPos.y + 40 > 600 ? 100 : lastPos.y + 40;
+        const nextX = lastPos.x + 60 > 800 ? 100 : lastPos.x + 60;
+        const nextY = lastPos.y + 60 > 600 ? 100 : lastPos.y + 60;
 
+        const newId = Date.now().toString();
         const newElement = {
-            id: Date.now().toString(),
+            id: newId,
             type,
             x: nextX,
             y: nextY,
-            width: 160,
+            width: 165,
             height: 75,
             fill: 'var(--accent-primary)',
             text: type.toUpperCase(),
             subtext: `Novo ${type}`,
         };
 
-        setElements([...elements, newElement]);
+        let updatedElements = [...elements, newElement];
+
+        // LOGICA DE AUTO-CONEXÃO: Se houver um selecionado, conecta o novo a ele
+        if (selectedId) {
+            const sourceEl = elements.find(el => el.id === selectedId);
+            if (sourceEl && sourceEl.type !== 'arrow') {
+                const arrowId = `arrow-${Date.now()}`;
+                const newArrow = {
+                    id: arrowId,
+                    type: 'arrow',
+                    sourceId: sourceEl.id,
+                    targetId: newId,
+                    points: [sourceEl.x + 82, sourceEl.y + 40, nextX + 82, nextY + 40],
+                    stroke: 'var(--accent-secondary)',
+                    fill: 'var(--accent-secondary)',
+                };
+                updatedElements.push(newArrow);
+            }
+        }
+
+        setElements(updatedElements);
         setLastPos({ x: nextX, y: nextY });
-        setSelectedTool('select');
+        setSelectedId(newId); // Seleciona automaticamente o novo item
     };
 
     const saveDiagram = async () => {
@@ -103,7 +124,7 @@ export default function InfraWhiteboard() {
             <div className={styles.header}>
                 <div className={styles.info}>
                     <h2 className={styles.title}>Arquitetura de Infraestrutura</h2>
-                    <p className={styles.subtitle}>Gerencie e documente seus ativos de rede visualmente</p>
+                    <p className={styles.subtitle}>Clique nos ícones para adicionar e conectar automaticamente</p>
                 </div>
                 <div className={styles.actions}>
                     <button className={styles.actionBtn} onClick={() => setElements([])}>
@@ -119,52 +140,39 @@ export default function InfraWhiteboard() {
             <div className={styles.workspace}>
                 <div className={styles.sideToolbar}>
                     <div className={styles.toolGroup}>
-                        <button
-                            className={`${styles.tool} ${selectedTool === 'select' ? styles.toolActive : ''}`}
-                            onClick={() => setSelectedTool('select')}
-                            title="Selecionar"
-                        >
-                            <MousePointer2 size={20} />
-                        </button>
-                        <button
-                            className={`${styles.tool} ${selectedTool === 'hand' ? styles.toolActive : ''}`}
-                            onClick={() => setSelectedTool('hand')}
-                            title="Mão"
-                        >
-                            <HandIcon size={20} />
-                        </button>
-                        <button
-                            className={`${styles.tool} ${selectedTool === 'arrow' ? styles.toolActive : ''}`}
-                            onClick={() => setSelectedTool('arrow')}
-                            title="Conexão"
-                        >
-                            <ArrowUpRight size={20} />
-                        </button>
+                        <button className={styles.tool} onClick={() => addElement('server')} title="Servidor"><Server size={22} /></button>
+                        <button className={styles.tool} onClick={() => addElement('database')} title="Banco de Dados"><Database size={22} /></button>
+                        <button className={styles.tool} onClick={() => addElement('firewall')} title="Firewall"><Shield size={22} /></button>
+                        <button className={styles.tool} onClick={() => addElement('loadbalancer')} title="Load Balancer"><Cpu size={22} /></button>
+                        <button className={styles.tool} onClick={() => addElement('cloud')} title="Cloud/SaaS"><Cloud size={22} /></button>
+                        <button className={styles.tool} onClick={() => addElement('rect')} title="Container"><Box size={22} /></button>
+                        <button className={styles.tool} onClick={() => addElement('text')} title="Texto"><Type size={22} /></button>
                     </div>
 
                     <div className={styles.divider} />
 
                     <div className={styles.toolGroup}>
-                        <button className={styles.tool} onClick={() => addElement('server')} title="Servidor"><Server size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('database')} title="Banco de Dados"><Database size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('firewall')} title="Firewall"><Shield size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('loadbalancer')} title="Load Balancer"><Cpu size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('cloud')} title="Cloud/SaaS"><Cloud size={20} /></button>
-                        <button className={styles.tool} onClick={() => addElement('rect')} title="Container"><Box size={20} /></button>
-                    </div>
-
-                    <div className={styles.divider} />
-
-                    <div className={styles.toolGroup}>
-                        <button className={styles.tool} onClick={() => addElement('text')} title="Texto"><Type size={20} /></button>
+                        <button
+                            className={`${styles.tool} ${styles.danger}`}
+                            onClick={() => {
+                                if (selectedId) {
+                                    setElements(elements.filter(el => el.id !== selectedId));
+                                    setSelectedId(null);
+                                }
+                            }}
+                            title="Remover Selecionado"
+                            style={{ color: '#ff4d4d' }}
+                        >
+                            <Trash2 size={22} />
+                        </button>
                     </div>
                 </div>
 
-                <div id="canvas-parent" className={styles.canvasContainer} data-tool={selectedTool}>
+                <div id="canvas-parent" className={styles.canvasContainer}>
                     <Canvas
                         elements={elements}
                         setElements={setElements}
-                        selectedTool={selectedTool}
+                        selectedTool="select"
                         selectedId={selectedId}
                         setSelectedId={setSelectedId}
                     />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Group, Arrow, Line } from 'react-konva';
+import { Stage, Layer, Rect, Circle, Text, Group, Arrow } from 'react-konva';
 import * as LucideIcons from 'lucide-react';
 
 interface CanvasProps {
@@ -12,19 +12,7 @@ interface CanvasProps {
     setSelectedId: (id: string | null) => void;
 }
 
-// Map tool types to Lucide Icons for rendering
-const ICON_MAP: Record<string, any> = {
-    server: LucideIcons.Server,
-    firewall: LucideIcons.Shield,
-    switch: LucideIcons.Network,
-    cloud: LucideIcons.Cloud,
-    rect: LucideIcons.Box,
-    database: LucideIcons.Database,
-    loadbalancer: LucideIcons.Cpu,
-};
-
 export default function InfraCanvas({ elements, setElements, selectedTool, selectedId, setSelectedId }: CanvasProps) {
-    const [isDrawing, setIsDrawing] = useState(false);
     const stageRef = useRef<any>(null);
     const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
 
@@ -52,62 +40,35 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
         const y = Math.round(e.target.y() / 10) * 10;
         e.target.position({ x, y });
 
-        setElements(elements.map(el => {
+        // Update elements
+        const updatedElements = elements.map(el => {
             if (el.id === id) {
                 return { ...el, x, y };
+            }
+            return el;
+        });
+
+        // Update arrows that depend on this element
+        setElements(updatedElements.map(el => {
+            if (el.type === 'arrow' && (el.sourceId || el.targetId)) {
+                const source = updatedElements.find(item => item.id === el.sourceId);
+                const target = updatedElements.find(item => item.id === el.targetId);
+
+                if (source && target) {
+                    return {
+                        ...el,
+                        points: [source.x + 82, source.y + 40, target.x + 82, target.y + 40]
+                    };
+                }
             }
             return el;
         }));
     };
 
     const handleMouseDown = (e: any) => {
-        // Deselect if clicking on stage empty area
         if (e.target === e.target.getStage()) {
             setSelectedId(null);
         }
-
-        if (selectedTool !== 'arrow') return;
-
-        const stage = e.target.getStage();
-        const pos = stage.getPointerPosition();
-        const stageX = stage.x();
-        const stageY = stage.y();
-        const scale = stage.scaleX();
-        const x = (pos.x - stageX) / scale;
-        const y = (pos.y - stageY) / scale;
-
-        setIsDrawing(true);
-        const newArrow = {
-            id: Date.now().toString(),
-            type: 'arrow',
-            points: [x, y, x, y],
-            stroke: 'var(--accent-secondary)', // Ciano FG
-            fill: 'var(--accent-secondary)',
-        };
-        setElements([...elements, newArrow]);
-        setSelectedId(newArrow.id);
-    };
-
-    const handleMouseMove = (e: any) => {
-        if (!isDrawing || selectedTool !== 'arrow') return;
-        const stage = e.target.getStage();
-        const pos = stage.getPointerPosition();
-        const stageX = stage.x();
-        const stageY = stage.y();
-        const scale = stage.scaleX();
-        const x = (pos.x - stageX) / scale;
-        const y = (pos.y - stageY) / scale;
-
-        const currentElements = [...elements];
-        const lastArrow = currentElements[currentElements.length - 1];
-        if (lastArrow) {
-            lastArrow.points = [lastArrow.points[0], lastArrow.points[1], x, y];
-            setElements(currentElements);
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDrawing(false);
     };
 
     return (
@@ -115,15 +76,13 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
             ref={stageRef}
             width={dimensions.width}
             height={dimensions.height}
-            draggable={selectedTool === 'hand'}
             onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
             style={{ background: 'transparent' }}
         >
             <Layer>
                 {elements.map((el) => {
                     const isSelected = selectedId === el.id;
+
                     if (el.type === 'arrow') {
                         return (
                             <Arrow
@@ -136,23 +95,10 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
                                 pointerWidth={10}
                                 lineCap="round"
                                 lineJoin="round"
-                                draggable={selectedTool === 'select'}
                                 opacity={isSelected ? 1 : 0.6}
-                                onClick={() => setSelectedId(el.id)}
-                                onDragStart={(e) => handleDragStart(e, el.id)}
-                                onDragEnd={(e) => {
-                                    const dx = e.target.x();
-                                    const dy = e.target.y();
-                                    e.target.position({ x: 0, y: 0 });
-                                    setElements(elements.map(item => {
-                                        if (item.id === el.id) {
-                                            return {
-                                                ...item,
-                                                points: [item.points[0] + dx, item.points[1] + dy, item.points[2] + dx, item.points[3] + dy]
-                                            };
-                                        }
-                                        return item;
-                                    }));
+                                onClick={(e) => {
+                                    e.cancelBubble = true;
+                                    setSelectedId(el.id);
                                 }}
                             />
                         );
@@ -163,22 +109,23 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
                             key={el.id}
                             x={el.x}
                             y={el.y}
-                            draggable={selectedTool === 'select'}
+                            draggable
                             onDragStart={(e) => handleDragStart(e, el.id)}
                             onDragEnd={(e) => handleDragEnd(e, el.id)}
-                            onClick={() => setSelectedId(el.id)}
+                            onClick={(e) => {
+                                e.cancelBubble = true;
+                                setSelectedId(el.id);
+                            }}
                             onMouseEnter={(e) => {
-                                if (selectedTool === 'select') {
-                                    const stage = e.target.getStage();
-                                    if (stage) stage.container().style.cursor = 'pointer';
-                                }
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'grab';
                             }}
                             onMouseLeave={(e) => {
                                 const stage = e.target.getStage();
                                 if (stage) stage.container().style.cursor = '';
                             }}
                         >
-                            {/* Card Background - Ultra Premium FG Style */}
+                            {/* Card Background */}
                             <Rect
                                 width={el.width || 165}
                                 height={el.height || 75}
@@ -186,13 +133,13 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
                                 cornerRadius={12}
                                 stroke={isSelected ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.08)'}
                                 strokeWidth={isSelected ? 3 : 1}
-                                shadowBlur={30}
+                                shadowBlur={isSelected ? 40 : 20}
                                 shadowOpacity={0.6}
                                 shadowColor="black"
                                 shadowOffset={{ x: 0, y: 15 }}
                             />
 
-                            {/* Accent Column (Laranja FG) */}
+                            {/* Accent Column */}
                             <Rect
                                 width={6}
                                 height={75}
@@ -200,7 +147,7 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
                                 cornerRadius={[12, 0, 0, 12]}
                             />
 
-                            {/* Icon Accent Circle (Ciano FG) */}
+                            {/* Icon Circle */}
                             <Circle
                                 x={32}
                                 y={38}
@@ -208,8 +155,6 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
                                 fill="var(--accent-secondary)"
                                 opacity={0.12}
                             />
-
-                            {/* Icon Center Dot */}
                             <Circle x={32} y={38} radius={5} fill="var(--accent-secondary)" />
 
                             {/* Name */}
@@ -227,7 +172,7 @@ export default function InfraCanvas({ elements, setElements, selectedTool, selec
 
                             {/* Subtext */}
                             <Text
-                                text={el.subtext || 'Componente'}
+                                text={el.subtext || 'Ativo'}
                                 fontSize={11}
                                 fontWeight="500"
                                 fill="rgba(255, 255, 255, 0.4)"

@@ -115,13 +115,22 @@ export default function Dashboard() {
     const { data: assets, isLoading: loadingAssets } = useSWR('/api/assets', fetcher);
     const { data: routines, isLoading: loadingRoutines, mutate } = useSWR('/api/backups', fetcher);
     const { data: licenses, isLoading: loadingLicenses } = useSWR('/api/licenses', fetcher);
+    const { data: statsData } = useSWR('/api/dashboard/stats', fetcher);
 
     const [period, setPeriod] = useState('30 dias');
     const isLoading = loadingAssets || loadingRoutines || loadingLicenses;
 
     // Memoized Data Processing
     const days = period === '7 dias' ? 7 : period === '30 dias' ? 30 : 90;
-    const history = useMemo(() => generateHistory(days), [days]);
+
+    // Prioriza dados reais do banco, senão mostra gráfico limpo (gerado em utils)
+    const history = useMemo(() => {
+        if (statsData?.history && Array.isArray(statsData.history)) {
+            return statsData.history.slice(-days);
+        }
+        return generateHistory(days);
+    }, [statsData, days]);
+
     const heatmap = useMemo(() => generateHeatmap(), []);
 
     const stats = useMemo(() => {
@@ -198,7 +207,7 @@ export default function Dashboard() {
             </header>
 
             <section className={styles.kpiGrid}>
-                <KpiCard label="Ativos em Inventário" value={stats.total} change="+4.2%" icon={Box} color="#6366f1" />
+                <KpiCard label="Ativos em Inventário" value={stats.total} change={stats.total > 0 ? "+1" : "0"} icon={Box} color="#6366f1" />
                 <KpiCard
                     label="Custos c/ Licenças"
                     value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.licenseCost)}
@@ -207,7 +216,7 @@ export default function Dashboard() {
                     color="#10b981"
                 />
                 <KpiCard label="Incidentes Críticos" value={stats.critical} change={stats.critical > 0 ? `+${stats.critical}` : '0'} icon={AlertTriangle} color="#ef4444" />
-                <KpiCard label="Integridade de Backups" value={stats.ok} change="+0.5%" icon={CheckCircle2} color="#10b981" />
+                <KpiCard label="Integridade de Backups" value={stats.ok} change={stats.ok > 0 ? "+1" : "0"} icon={CheckCircle2} color="#10b981" />
                 <KpiCard label="SLA de Conformidade" value={`${stats.compliance}%`} icon={Shield} color={stats.compliance >= 90 ? '#10b981' : '#f59e0b'} />
             </section>
 
