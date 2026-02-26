@@ -13,18 +13,19 @@
   --text-tertiary: #94a3b8;
   --text-white: #ffffff;
 
-  --accent-primary: #00439c;
-  /* PS Blue */
-  --accent-secondary: #0070d1;
-  --accent-light: #e0f2fe;
+  --accent-primary: #F47920;
+  /* FG Laranja */
+  --accent-secondary: #00B1B0;
+  /* FG Ciano */
+  --accent-light: rgba(244, 121, 32, 0.1);
 
   --accent-success: #10b981;
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
-  --accent-info: #0070d1;
+  --accent-info: #00B1B0;
 
-  --border-primary: rgba(0, 67, 156, 0.08);
-  --border-secondary: rgba(0, 67, 156, 0.15);
+  --border-primary: rgba(244, 121, 32, 0.1);
+  --border-secondary: rgba(244, 121, 32, 0.2);
 
   --navbar-height: 72px;
   --sidebar-width: 280px;
@@ -34,19 +35,19 @@
   --radius-lg: 20px;
   --radius-full: 9999px;
 
-  /* Sophisticated Depth (PS5 Style) */
+  /* Sophisticated Depth (Logistics FG Style) */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 4px 12px rgba(0, 67, 156, 0.05);
-  --shadow-lg: 0 12px 32px rgba(0, 67, 156, 0.08);
+  --shadow-md: 0 4px 12px rgba(244, 121, 32, 0.05);
+  --shadow-lg: 0 12px 32px rgba(244, 121, 32, 0.08);
 
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme='dark'] {
-  /* PlayStation 5 Inspired Palette - Dark Mode */
-  --bg-primary: #040608;
-  --bg-secondary: #0a0c10;
-  --bg-gradient: radial-gradient(circle at top center, #0a1118 0%, #040608 100%);
+  /* FG Inspired Palette - Dark Mode */
+  --bg-primary: #0a0c10;
+  --bg-secondary: #0f141a;
+  --bg-gradient: radial-gradient(circle at top center, #151b23 0%, #0a0c10 100%);
 
   --surface-1: #0f141a;
   --surface-2: #161c24;
@@ -56,10 +57,9 @@
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
 
-  --accent-primary: #0070d1;
-  /* Brighter PS Blue for Dark Mode */
-  --accent-secondary: #3b82f6;
-  --accent-light: rgba(0, 112, 209, 0.15);
+  --accent-primary: #F47920;
+  --accent-secondary: #00B1B0;
+  --accent-light: rgba(244, 121, 32, 0.15);
 
   --border-primary: rgba(255, 255, 255, 0.06);
   --border-secondary: rgba(255, 255, 255, 0.12);

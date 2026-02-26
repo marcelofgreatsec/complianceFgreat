@@ -8,6 +8,8 @@ interface CanvasProps {
     elements: any[];
     setElements: (elements: any[]) => void;
     selectedTool: string;
+    selectedId: string | null;
+    setSelectedId: (id: string | null) => void;
 }
 
 // Map tool types to Lucide Icons for rendering
@@ -21,7 +23,7 @@ const ICON_MAP: Record<string, any> = {
     loadbalancer: LucideIcons.Cpu,
 };
 
-export default function InfraCanvas({ elements, setElements, selectedTool }: CanvasProps) {
+export default function InfraCanvas({ elements, setElements, selectedTool, selectedId, setSelectedId }: CanvasProps) {
     const [isDrawing, setIsDrawing] = useState(false);
     const stageRef = useRef<any>(null);
     const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
@@ -41,11 +43,13 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
         return () => window.removeEventListener('resize', updateSize);
     }, []);
 
+    const handleDragStart = (e: any, id: string) => {
+        setSelectedId(id);
+    };
+
     const handleDragEnd = (e: any, id: string) => {
-        // Simple snapping to 10px grid
         const x = Math.round(e.target.x() / 10) * 10;
         const y = Math.round(e.target.y() / 10) * 10;
-
         e.target.position({ x, y });
 
         setElements(elements.map(el => {
@@ -57,6 +61,11 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
     };
 
     const handleMouseDown = (e: any) => {
+        // Deselect if clicking on stage empty area
+        if (e.target === e.target.getStage()) {
+            setSelectedId(null);
+        }
+
         if (selectedTool !== 'arrow') return;
 
         const stage = e.target.getStage();
@@ -64,7 +73,6 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
         const stageX = stage.x();
         const stageY = stage.y();
         const scale = stage.scaleX();
-
         const x = (pos.x - stageX) / scale;
         const y = (pos.y - stageY) / scale;
 
@@ -73,26 +81,25 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
             id: Date.now().toString(),
             type: 'arrow',
             points: [x, y, x, y],
-            stroke: '#00c8ff', // Cyan highlight
+            stroke: 'var(--accent-secondary)', // Ciano FG
+            fill: 'var(--accent-secondary)',
         };
         setElements([...elements, newArrow]);
+        setSelectedId(newArrow.id);
     };
 
     const handleMouseMove = (e: any) => {
         if (!isDrawing || selectedTool !== 'arrow') return;
-
         const stage = e.target.getStage();
         const pos = stage.getPointerPosition();
         const stageX = stage.x();
         const stageY = stage.y();
         const scale = stage.scaleX();
-
         const x = (pos.x - stageX) / scale;
         const y = (pos.y - stageY) / scale;
 
         const currentElements = [...elements];
         const lastArrow = currentElements[currentElements.length - 1];
-
         if (lastArrow) {
             lastArrow.points = [lastArrow.points[0], lastArrow.points[1], x, y];
             setElements(currentElements);
@@ -101,23 +108,6 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
 
     const handleMouseUp = () => {
         setIsDrawing(false);
-    };
-
-    // Helper to render icon-like shapes (simplified for Konva)
-    const renderIcon = (type: string, fill: string) => {
-        // Enforce specific colors for types if needed
-        return (
-            <Rect
-                width={40}
-                height={40}
-                x={10}
-                y={10}
-                fill={fill || 'rgba(0, 112, 209, 0.2)'}
-                cornerRadius={8}
-                stroke="rgba(255, 255, 255, 0.2)"
-                strokeWidth={1}
-            />
-        );
     };
 
     return (
@@ -132,22 +122,24 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
             style={{ background: 'transparent' }}
         >
             <Layer>
-                {/* Visual Grid Dots (Optional but nice) */}
                 {elements.map((el) => {
+                    const isSelected = selectedId === el.id;
                     if (el.type === 'arrow') {
                         return (
                             <Arrow
                                 key={el.id}
                                 points={el.points}
-                                stroke={el.stroke || '#888'}
-                                fill={el.stroke || '#888'}
-                                strokeWidth={2}
-                                pointerLength={8}
-                                pointerWidth={8}
+                                stroke={isSelected ? 'var(--accent-primary)' : 'var(--accent-secondary)'}
+                                fill={isSelected ? 'var(--accent-primary)' : 'var(--accent-secondary)'}
+                                strokeWidth={isSelected ? 4 : 2}
+                                pointerLength={10}
+                                pointerWidth={10}
                                 lineCap="round"
                                 lineJoin="round"
                                 draggable={selectedTool === 'select'}
-                                opacity={0.8}
+                                opacity={isSelected ? 1 : 0.6}
+                                onClick={() => setSelectedId(el.id)}
+                                onDragStart={(e) => handleDragStart(e, el.id)}
                                 onDragEnd={(e) => {
                                     const dx = e.target.x();
                                     const dy = e.target.y();
@@ -166,62 +158,82 @@ export default function InfraCanvas({ elements, setElements, selectedTool }: Can
                         );
                     }
 
-                    const isSelected = false; // Add selection logic if needed
-
                     return (
                         <Group
                             key={el.id}
                             x={el.x}
                             y={el.y}
                             draggable={selectedTool === 'select'}
+                            onDragStart={(e) => handleDragStart(e, el.id)}
                             onDragEnd={(e) => handleDragEnd(e, el.id)}
-                            onClick={() => {
+                            onClick={() => setSelectedId(el.id)}
+                            onMouseEnter={(e) => {
                                 if (selectedTool === 'select') {
-                                    // Handle selection
+                                    const stage = e.target.getStage();
+                                    if (stage) stage.container().style.cursor = 'pointer';
                                 }
                             }}
+                            onMouseLeave={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = '';
+                            }}
                         >
-                            {/* Card Background */}
+                            {/* Card Background - Ultra Premium FG Style */}
                             <Rect
-                                width={el.width || 140}
-                                height={el.height || 60}
-                                fill="rgba(30, 30, 30, 0.85)"
+                                width={el.width || 165}
+                                height={el.height || 75}
+                                fill="rgba(10, 12, 16, 0.98)"
                                 cornerRadius={12}
-                                stroke={isSelected ? '#0070d1' : 'rgba(255, 255, 255, 0.1)'}
-                                strokeWidth={isSelected ? 2 : 1}
-                                shadowBlur={15}
-                                shadowOpacity={0.4}
+                                stroke={isSelected ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.08)'}
+                                strokeWidth={isSelected ? 3 : 1}
+                                shadowBlur={30}
+                                shadowOpacity={0.6}
                                 shadowColor="black"
+                                shadowOffset={{ x: 0, y: 15 }}
                             />
 
-                            {/* Icon Placeholder/Simulated */}
+                            {/* Accent Column (Laranja FG) */}
+                            <Rect
+                                width={6}
+                                height={75}
+                                fill="var(--accent-primary)"
+                                cornerRadius={[12, 0, 0, 12]}
+                            />
+
+                            {/* Icon Accent Circle (Ciano FG) */}
                             <Circle
-                                x={25}
-                                y={30}
-                                radius={15}
-                                fill={el.fill || '#0070d1'}
-                                opacity={0.2}
+                                x={32}
+                                y={38}
+                                radius={18}
+                                fill="var(--accent-secondary)"
+                                opacity={0.12}
                             />
 
-                            {/* Component Text */}
+                            {/* Icon Center Dot */}
+                            <Circle x={32} y={38} radius={5} fill="var(--accent-secondary)" />
+
+                            {/* Name */}
                             <Text
                                 text={el.text || el.type.toUpperCase()}
-                                fontSize={13}
-                                fontStyle="bold"
+                                fontSize={14}
+                                fontStyle="800"
                                 fill="#ffffff"
-                                x={45}
+                                x={55}
                                 y={23}
-                                width={90}
+                                width={100}
                                 align="left"
+                                letterSpacing={-0.3}
                             />
 
+                            {/* Subtext */}
                             <Text
-                                text={el.subtext || 'Component'}
-                                fontSize={10}
-                                fill="#888888"
-                                x={45}
-                                y={38}
-                                width={90}
+                                text={el.subtext || 'Componente'}
+                                fontSize={11}
+                                fontWeight="500"
+                                fill="rgba(255, 255, 255, 0.4)"
+                                x={55}
+                                y={42}
+                                width={100}
                                 align="left"
                             />
                         </Group>

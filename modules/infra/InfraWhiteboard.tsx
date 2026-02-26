@@ -38,13 +38,21 @@ export default function InfraWhiteboard() {
     const { data: diagrams, mutate } = useSWR('/api/infra', fetcher);
     const [elements, setElements] = useState<any[]>([]);
     const [selectedTool, setSelectedTool] = useState('select');
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [lastPos, setLastPos] = useState({ x: 100, y: 100 });
 
     useEffect(() => {
         if (diagrams?.[0]?.data) {
             try {
                 const data = JSON.parse(diagrams[0].data);
-                if (Array.isArray(data)) setElements(data);
+                if (Array.isArray(data)) {
+                    setElements(data);
+                    if (data.length > 0) {
+                        const last = data[data.length - 1];
+                        if (last.x && last.y) setLastPos({ x: last.x, y: last.y });
+                    }
+                }
             } catch (e) {
                 console.error("Error parsing diagram", e);
             }
@@ -52,23 +60,24 @@ export default function InfraWhiteboard() {
     }, [diagrams]);
 
     const addElement = (type: string) => {
+        const nextX = lastPos.x + 40 > 800 ? 100 : lastPos.x + 40;
+        const nextY = lastPos.y + 40 > 600 ? 100 : lastPos.y + 40;
+
         const newElement = {
             id: Date.now().toString(),
             type,
-            x: 150,
-            y: 150,
-            width: 140,
-            height: 60,
-            fill: type === 'server' ? '#0070d1' :
-                type === 'database' ? '#f59e0b' :
-                    type === 'firewall' ? '#ef4444' :
-                        type === 'cloud' ? '#8b5cf6' : '#0070d1',
+            x: nextX,
+            y: nextY,
+            width: 160,
+            height: 75,
+            fill: 'var(--accent-primary)',
             text: type.toUpperCase(),
-            subtext: type === 'server' ? 'Servidor v1' :
-                type === 'database' ? 'PostgreSQL' :
-                    type === 'firewall' ? 'WAF/Firewall' : 'Novo Recurso',
+            subtext: `Novo ${type}`,
         };
+
         setElements([...elements, newElement]);
+        setLastPos({ x: nextX, y: nextY });
+        setSelectedTool('select');
     };
 
     const saveDiagram = async () => {
@@ -156,6 +165,8 @@ export default function InfraWhiteboard() {
                         elements={elements}
                         setElements={setElements}
                         selectedTool={selectedTool}
+                        selectedId={selectedId}
+                        setSelectedId={setSelectedId}
                     />
                 </div>
             </div>
