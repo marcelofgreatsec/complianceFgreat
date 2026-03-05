@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         const newBackup = await prisma.backup.create({
             data: {
                 assetId: assetId!,
-                backupDate: new Date(backupDate),
+                backupDate: backupDate,
                 size: size!,
                 status
             }

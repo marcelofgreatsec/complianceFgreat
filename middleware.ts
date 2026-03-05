@@ -1,15 +1,12 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-export function middleware(request: NextRequest) {
-    // Deixar passar TODOS os requests sem fazer validações
-    // Apenas registrar o middleware como ativo (não causa timeout)
-    return NextResponse.next()
+export async function middleware(request: NextRequest) {
+    return await updateSession(request)
 }
 
 export const config = {
     matcher: [
-        // Middleware para páginas e rotas SSR
-        // Remover /api para não interceptar APIs
         '/((?!api|_next/static|_next/image|favicon.ico).*)',
     ],
 }

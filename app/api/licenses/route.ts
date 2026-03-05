@@ -62,7 +62,7 @@ export async function POST(req: Request) {
                 totalSeats,
                 usedSeats,
                 monthlyCost,
-                renewalDate: renewalDate ? new Date(renewalDate) : null,
+                renewalDate: renewalDate || null,
                 status,
                 responsible: responsible || null,
                 notes: notes || null

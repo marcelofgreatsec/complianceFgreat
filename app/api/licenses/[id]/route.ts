@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { LicenseSchema } from '@/lib/validations/license-schema';
 
 /**
  * PATCH /api/licenses/[id]
@@ -21,16 +22,11 @@ export async function PATCH(
 
         const { id } = await context.params;
         const body = await req.json();
-
-        const updateData: any = { ...body };
-        if (body.totalSeats !== undefined) updateData.totalSeats = parseInt(body.totalSeats) || 1;
-        if (body.usedSeats !== undefined) updateData.usedSeats = parseInt(body.usedSeats) || 0;
-        if (body.monthlyCost !== undefined) updateData.monthlyCost = parseFloat(body.monthlyCost) || 0.0;
-        if (body.renewalDate !== undefined) updateData.renewalDate = body.renewalDate ? new Date(body.renewalDate) : null;
+        const validatedData = LicenseSchema.partial().parse(body);
 
         const license = await prisma.license.update({
             where: { id },
-            data: updateData
+            data: validatedData as any
         });
 
         await prisma.auditLog.create({

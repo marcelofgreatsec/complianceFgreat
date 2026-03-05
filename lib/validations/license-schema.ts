@@ -8,7 +8,7 @@ export const LicenseSchema = z.object({
     totalSeats: z.coerce.number().int().min(1).optional().default(1),
     usedSeats: z.coerce.number().int().min(0).optional().default(0),
     monthlyCost: z.coerce.number().min(0).optional().default(0.0),
-    renewalDate: z.string().datetime().optional().nullable(),
+    renewalDate: z.coerce.date().optional().nullable(),
     status: z.enum(['Ativo', 'Inativo', 'Expirada']).default('Ativo'),
     responsible: z.string().optional().nullable().transform(sanitize),
     notes: z.string().optional().nullable().transform(sanitize)
