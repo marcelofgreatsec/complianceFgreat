@@ -22,8 +22,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
         });
 
         return NextResponse.json({ ...doc, credPass: doc.credPass ? '••••••••' : null });
-    } catch (e) {
-        return NextResponse.json({ error: 'Erro' }, { status: 500 });
+    } catch (e: any) {
+        console.error('[DOC_GET_ERROR]', e.message || e);
+        return NextResponse.json({ error: 'Erro ao buscar documento', details: e.message }, { status: 500 });
     }
 }
 
@@ -57,8 +58,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         });
 
         return NextResponse.json({ ...doc, credPass: doc.credPass ? '••••••••' : null });
-    } catch (e) {
-        return NextResponse.json({ error: 'Erro ao atualizar' }, { status: 500 });
+    } catch (e: any) {
+        console.error('[DOC_PUT_ERROR]', e.message || e);
+        return NextResponse.json({ error: 'Erro ao atualizar documento', details: e.message }, { status: 500 });
     }
 }
 
@@ -73,7 +75,8 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
 
         await prisma.document.delete({ where: { id } });
         return NextResponse.json({ ok: true });
-    } catch (e) {
-        return NextResponse.json({ error: 'Erro ao excluir' }, { status: 500 });
+    } catch (e: any) {
+        console.error('[DOC_DELETE_ERROR]', e.message || e);
+        return NextResponse.json({ error: 'Erro ao excluir documento', details: e.message }, { status: 500 });
     }
 }

@@ -38,8 +38,9 @@ export async function PATCH(
         });
 
         return NextResponse.json(license);
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao atualizar licença' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[LICENSES_PATCH_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao atualizar licença', details: error.message }, { status: 500 });
     }
 }
 
@@ -77,7 +78,8 @@ export async function DELETE(
         });
 
         return NextResponse.json({ message: 'Licença excluída com sucesso' });
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao excluir licença' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[LICENSES_DELETE_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao excluir licença', details: error.message }, { status: 500 });
     }
 }

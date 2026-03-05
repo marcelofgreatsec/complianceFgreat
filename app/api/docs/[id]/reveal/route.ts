@@ -22,7 +22,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         });
 
         return NextResponse.json({ credUser: doc.credUser, credPass: doc.credPass });
-    } catch (e) {
-        return NextResponse.json({ error: 'Erro' }, { status: 500 });
+    } catch (e: any) {
+        console.error('[DOC_REVEAL_ERROR]', e.message || e);
+        return NextResponse.json({ error: 'Erro ao revelar credencial', details: e.message }, { status: 500 });
     }
 }

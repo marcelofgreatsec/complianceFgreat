@@ -13,8 +13,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         const { name, icon } = await req.json();
         const cat = await prisma.docCategory.update({ where: { id }, data: { name, icon } });
         return NextResponse.json(cat);
-    } catch (e) {
-        return NextResponse.json({ error: 'Erro ao atualizar categoria' }, { status: 500 });
+    } catch (e: any) {
+        console.error('[DOC_CAT_PUT_ERROR]', e.message || e);
+        return NextResponse.json({ error: 'Erro ao atualizar categoria', details: e.message }, { status: 500 });
     }
 }
 
@@ -28,7 +29,8 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
         }
         await prisma.docCategory.delete({ where: { id } });
         return NextResponse.json({ ok: true });
-    } catch (e) {
-        return NextResponse.json({ error: 'Erro ao excluir categoria' }, { status: 500 });
+    } catch (e: any) {
+        console.error('[DOC_CAT_DELETE_ERROR]', e.message || e);
+        return NextResponse.json({ error: 'Erro ao excluir categoria', details: e.message }, { status: 500 });
     }
 }

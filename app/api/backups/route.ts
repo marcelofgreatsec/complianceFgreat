@@ -22,8 +22,9 @@ export async function GET(req: Request) {
             orderBy: { backupDate: 'desc' }
         });
         return NextResponse.json(backupsList);
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao buscar backups' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[BACKUPS_GET_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao buscar backups', details: error.message }, { status: 500 });
     }
 }
 
@@ -65,9 +66,10 @@ export async function POST(req: Request) {
 
         return NextResponse.json(newBackup);
     } catch (error: any) {
+        console.error('[BACKUPS_POST_ERROR]', error.message || error);
         if (error.name === 'ZodError') {
             return NextResponse.json({ error: 'Dados inválidos', details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: 'Erro ao criar registro de backup' }, { status: 500 });
+        return NextResponse.json({ error: 'Erro ao criar registro de backup', details: error.message }, { status: 500 });
     }
 }

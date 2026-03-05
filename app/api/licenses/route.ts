@@ -25,8 +25,9 @@ export async function GET(req: Request) {
             orderBy: { name: 'asc' }
         });
         return NextResponse.json(licenses);
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao buscar licenças' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[LICENSES_GET_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao buscar licenças', details: error.message }, { status: 500 });
     }
 }
 
@@ -78,10 +79,10 @@ export async function POST(req: Request) {
 
         return NextResponse.json(license);
     } catch (error: any) {
-        console.error('[LICENSE_CREATE_ERROR]', error);
+        console.error('[LICENSES_POST_ERROR]', error.message || error);
         if (error.name === 'ZodError') {
             return NextResponse.json({ error: 'Dados inválidos', details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: 'Erro ao criar licença' }, { status: 500 });
+        return NextResponse.json({ error: 'Erro ao criar licença', details: error.message }, { status: 500 });
     }
 }

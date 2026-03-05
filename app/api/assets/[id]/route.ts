@@ -37,8 +37,9 @@ export async function PUT(
         }
 
         return NextResponse.json(asset);
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao atualizar ativo' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[ASSETS_PUT_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao atualizar ativo', details: error.message }, { status: 500 });
     }
 }
 
@@ -58,7 +59,8 @@ export async function DELETE(
         await prisma.asset.delete({ where: { id } });
 
         return NextResponse.json({ message: 'Ativo excluído com sucesso' });
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao excluir ativo' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[ASSETS_DELETE_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao excluir ativo', details: error.message }, { status: 500 });
     }
 }

@@ -24,8 +24,9 @@ export async function GET(req: Request) {
             orderBy: { updatedAt: 'desc' }
         });
         return NextResponse.json(assets);
-    } catch (error) {
-        return NextResponse.json({ error: 'Erro ao buscar ativos' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[ASSETS_GET_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao buscar ativos', details: error.message }, { status: 500 });
     }
 }
 
@@ -66,9 +67,10 @@ export async function POST(req: Request) {
 
         return NextResponse.json(asset);
     } catch (error: any) {
+        console.error('[ASSETS_POST_ERROR]', error.message || error);
         if (error.name === 'ZodError') {
             return NextResponse.json({ error: 'Dados inválidos', details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: 'Erro ao criar ativo' }, { status: 500 });
+        return NextResponse.json({ error: 'Erro ao criar ativo', details: error.message }, { status: 500 });
     }
 }
