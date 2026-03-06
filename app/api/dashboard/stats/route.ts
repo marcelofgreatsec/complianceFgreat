@@ -1,19 +1,26 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
     try {
-        // Buscar logs dos últimos 30 dias
+        // Buscar logs dos últimos 30 dias via Prisma
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const { data, error } = await supabaseAdmin
-            .from('audit_logs')
-            .select('created_at, action')
-            .gte('created_at', thirtyDaysAgo.toISOString())
-            .order('created_at', { ascending: true });
-
-        if (error) throw error;
+        const logs = await prisma.auditLog.findMany({
+            where: {
+                timestamp: {
+                    gte: thirtyDaysAgo
+                }
+            },
+            select: {
+                timestamp: true,
+                action: true
+            },
+            orderBy: {
+                timestamp: 'asc'
+            }
+        });
 
         // Processar dados para o formato do Recharts
         const historyMap: Record<string, { date: string, ok: number, falha: number }> = {};
@@ -27,10 +34,11 @@ export async function GET() {
         }
 
         // Preencher com dados reais
-        data?.forEach((log: any) => {
-            const dateStr = new Date(log.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        logs.forEach((log) => {
+            const dateStr = new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
             if (historyMap[dateStr]) {
-                if (log.action.includes('error') || log.action.includes('fail')) {
+                const actionLower = log.action.toLowerCase();
+                if (actionLower.includes('error') || actionLower.includes('fail') || actionLower.includes('invalid')) {
                     historyMap[dateStr].falha++;
                 } else {
                     historyMap[dateStr].ok++;
@@ -41,8 +49,8 @@ export async function GET() {
         const history = Object.values(historyMap);
 
         return NextResponse.json({ history });
-    } catch (error) {
-        console.error('Stats API Error:', error);
-        return NextResponse.json({ error: 'Erro ao carregar estatísticas' }, { status: 500 });
+    } catch (error: any) {
+        console.error('[STATS_API_ERROR]', error.message || error);
+        return NextResponse.json({ error: 'Erro ao carregar estatísticas', details: error.message }, { status: 500 });
     }
 }

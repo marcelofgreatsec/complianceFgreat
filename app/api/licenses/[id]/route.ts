@@ -33,7 +33,9 @@ export async function PATCH(
             data: {
                 userId: user.id,
                 action: 'UPDATE',
+                tableName: 'licencas',
                 resource: `LICENSE:${id} (${license.name})`,
+                ipAddress: req.headers.get('x-forwarded-for') || 'unknown'
             }
         });
 
@@ -73,7 +75,9 @@ export async function DELETE(
             data: {
                 userId: user.id,
                 action: 'DELETE',
+                tableName: 'licencas',
                 resource: `LICENSE:${id} (${license?.name || 'Unknown'})`,
+                ipAddress: req.headers.get('x-forwarded-for') || 'unknown'
             }
         });
 

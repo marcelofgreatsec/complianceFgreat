@@ -16,10 +16,10 @@ export async function GET() {
             take: 100
         });
         return NextResponse.json({ logs }, { status: 200 });
-    } catch (error) {
-        console.error('Error fetching admin logs:', error);
+    } catch (error: any) {
+        console.error('[ADMIN_LOGS_GET_ERROR]', error.message || error);
         return NextResponse.json(
-            { error: 'Failed to fetch admin logs' },
+            { error: 'Failed to fetch admin logs', details: error.message },
             { status: 500 }
         );
     }

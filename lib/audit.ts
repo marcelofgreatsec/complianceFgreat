@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 
 export async function log(params: {
@@ -12,12 +12,14 @@ export async function log(params: {
         const { data: { session } } = await supabase.auth.getSession()
         const ip = params.request.headers.get('x-forwarded-for') || 'unknown'
 
-        await supabaseAdmin.from('audit_logs').insert({
-            user_id: session?.user?.id,
-            action: params.action,
-            table_name: params.table,
-            record_id: params.recordId,
-            ip_address: ip
+        await prisma.auditLog.create({
+            data: {
+                userId: session?.user?.id || null,
+                action: params.action,
+                tableName: params.table,
+                resource: params.recordId ? `${params.table}:${params.recordId}` : params.table,
+                ipAddress: ip
+            }
         })
     } catch (e) {
         console.error('Audit log failed:', e)

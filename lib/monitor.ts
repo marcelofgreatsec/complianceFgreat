@@ -1,9 +1,10 @@
-import { supabaseAdmin } from './supabase-admin';
+import { prisma } from './prisma';
 
 export async function logSecurity(event: {
     type: string
     severity: 'LOW' | 'HIGH' | 'CRITICAL'
     details: any
+    ip?: string
 }) {
     const payload = {
         timestamp: new Date().toISOString(),
@@ -13,10 +14,13 @@ export async function logSecurity(event: {
     console.warn('[SECURITY]', payload);
 
     try {
-        await supabaseAdmin.from('security_alerts').insert({
-            type: event.type,
-            severity: event.severity,
-            details: event.details
+        await prisma.securityAlert.create({
+            data: {
+                type: event.type,
+                severity: event.severity,
+                details: typeof event.details === 'object' ? JSON.stringify(event.details) : String(event.details),
+                ipAddress: event.ip || 'unknown'
+            }
         });
     } catch (e) {
         console.error('Failed to log security alert to DB:', e);

@@ -5,8 +5,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -72,8 +70,23 @@ model AuditLog {
   userId    String?
   action    String
   resource  String
+  tableName String?  @map("table_name")
+  ipAddress String?  @map("ip_address")
   timestamp DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("logs_auditoria")
+}
+
+model SecurityAlert {
+  id        String   @id @default(cuid())
+  type      String
+  severity  String
+  details   String?
+  ipAddress String?  @map("ip_address")
+  timestamp DateTime @default(now())
+
+  @@map("alertas_seguranca")
 }
 
 model License {
