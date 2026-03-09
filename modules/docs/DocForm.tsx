@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { X, Save, Loader2, Eye, EyeOff } from 'lucide-react';
+import { X, Save, Loader2, Eye, EyeOff, UploadCloud } from 'lucide-react';
 import styles from '@/styles/Module.module.css';
 import { fetchWithCSRF } from '@/lib/api';
+import { createClient } from '@/lib/supabase/client';
 
 const TYPES = ['Documento', 'Link', 'Credencial', 'Procedimento'];
 
@@ -18,6 +19,7 @@ interface DocFormProps {
 export default function DocForm({ categories, initialData, onClose, onSuccess }: DocFormProps) {
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
     const { register, handleSubmit, watch, formState: { errors } } = useForm({
         defaultValues: initialData ?? { type: 'Documento' },
     });
@@ -26,12 +28,35 @@ export default function DocForm({ categories, initialData, onClose, onSuccess }:
     const onSubmit = async (data: any) => {
         setLoading(true);
         try {
+            let fileUrl = initialData?.fileUrl;
+            let fileType = initialData?.fileType;
+
+            if (file) {
+                const supabase = createClient();
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('documentos')
+                    .upload(fileName, file);
+
+                if (uploadError) throw new Error(`Erro no upload: ${uploadError.message}`);
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('documentos')
+                    .getPublicUrl(fileName);
+
+                fileUrl = publicUrl;
+                fileType = file.type || fileExt;
+            }
+
+            const payload = { ...data, fileUrl, fileType };
+
             const url = initialData ? `/api/docs/${initialData.id}` : '/api/docs';
             const method = initialData ? 'PUT' : 'POST';
             const res = await fetchWithCSRF(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
             });
             if (!res.ok) throw new Error((await res.json()).error ?? 'Erro');
             onSuccess();
@@ -73,6 +98,22 @@ export default function DocForm({ categories, initialData, onClose, onSuccess }:
                                 {TYPES.map(t => <option key={t}>{t}</option>)}
                             </select>
                         </div>
+
+                        {type === 'Documento' && (
+                            <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+                                <label className={styles.label}>Arquivo (Opcional)</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <label className={styles.buttonSecondary} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                                        <UploadCloud size={16} />
+                                        Selecionar Arquivo
+                                        <input type="file" style={{ display: 'none' }} onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                                    </label>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                        {file ? file.name : (initialData?.fileUrl ? 'Arquivo atual: ' + initialData.fileUrl.split('/').pop() : 'Nenhum arquivo selecionado')}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
                             <label className={styles.label}>Descrição</label>

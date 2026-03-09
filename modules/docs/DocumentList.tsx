@@ -243,6 +243,14 @@ export default function DocumentList() {
                                         <div className={styles.cardBody} onClick={(e) => e.stopPropagation()}>
                                             {doc.description && <p className={styles.cardDesc}>{doc.description}</p>}
 
+                                            {doc.type === 'Documento' && doc.fileUrl && (
+                                                <a href={doc.fileUrl} target="_blank" rel="noreferrer" className={styles.procedureBlock} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', background: 'var(--bg-tertiary)' }}>
+                                                    <FileText size={16} />
+                                                    <span style={{ flex: 1 }}>Anexo: {doc.title}</span>
+                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Clique para abrir</span>
+                                                </a>
+                                            )}
+
                                             {doc.type === 'Link' && doc.content && (
                                                 <a href={doc.content} target="_blank" rel="noreferrer" className={styles.procedureBlock} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
                                                     <Link2 size={16} /> {doc.content}
