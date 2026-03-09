@@ -5,7 +5,8 @@ import { PrismaPg } from '@prisma/adapter-pg'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 const pool = new Pool({
-    connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
+    // No Vercel, o DATABASE_URL aponta para o Supabase Connection Pooler (Pgbouncer), o que previne "Connection terminated unexpectedly"
+    connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
     ssl: {
         rejectUnauthorized: false
     }
