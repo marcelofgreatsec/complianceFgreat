@@ -1,0 +1,151 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String?
+  email     String?    @unique
+  password  String
+  role      String     @default("VIEWER")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  logs      AuditLog[]
+}
+
+model Asset {
+  id        String         @id
+  name      String
+  type      String         @map("asset_type")
+  location  String
+  status    String         @default("Ativo")
+  ip        String?
+  documents String?
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  history   AssetHistory[]
+  backups   Backup[]
+
+  @@map("ativos")
+}
+
+model AssetHistory {
+  id        String   @id @default(cuid())
+  assetId   String
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+model Backup {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  assetId    String   @map("asset_id")
+  asset      Asset    @relation(fields: [assetId], references: [id])
+  backupDate DateTime @map("backup_date")
+  size       String
+  status     String   // Sucesso, Erro, Pendente
+
+  @@map("backups")
+}
+
+model Infrastructure {
+  id        String   @id @default(cuid())
+  name      String
+  data      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("infraestrutura")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String
+  tableName String?  @map("table_name")
+  ipAddress String?  @map("ip_address")
+  timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("logs_auditoria")
+}
+
+model SecurityAlert {
+  id        String   @id @default(cuid())
+  type      String
+  severity  String
+  details   String?
+  ipAddress String?  @map("ip_address")
+  timestamp DateTime @default(now())
+
+  @@map("alertas_seguranca")
+}
+
+model License {
+  id          String    @id @default(cuid())
+  name        String
+  provider    String
+  key         String?
+  totalSeats  Int       @default(1) @map("total_seats")
+  usedSeats   Int       @default(0) @map("used_seats")
+  monthlyCost Float     @default(0.0) @map("monthly_cost")
+  renewalDate DateTime? @map("renewal_date")
+  status      String    @default("Ativo")
+  responsible String?
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("licencas")
+}
+
+model DocCategory {
+  id        String     @id @default(cuid())
+  name      String
+  icon      String     @default("folder")
+  createdAt DateTime   @default(now())
+  docs      Document[]
+
+  @@map("categorias_documentos")
+}
+
+model Document {
+  id          String         @id @default(cuid())
+  title       String
+  categoryId  String
+  type        String
+  description String?
+  tags        String?
+  content     String?
+  fileUrl     String?
+  fileType    String?
+  credUser    String?
+  credPass    String?
+  responsible String?
+  createdBy   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  accessLogs  DocAccessLog[]
+  category    DocCategory    @relation(fields: [categoryId], references: [id])
+
+  @@map("documentos")
+}
+
+model DocAccessLog {
+  id         String   @id @default(cuid())
+  documentId String
+  userId     String?
+  action     String
+  timestamp  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
