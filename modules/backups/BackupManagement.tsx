@@ -143,9 +143,9 @@ export default function BackupManagement() {
                     <span>Carregando registros de backups...</span>
                 </div>
             ) : error ? (
-                <div className={styles.errorBanner}>
+                <div className={styles.errorBanner} style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
                     <XCircle size={18} />
-                    Erro na conexão com o serviço de banco de dados.
+                    Erro na conexão: {JSON.stringify(error, null, 2)}
                 </div>
             ) : (
                 <div className={styles.tableContainer}>
