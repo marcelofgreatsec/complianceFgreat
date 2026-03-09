@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({ request });
@@ -41,6 +42,29 @@ export async function updateSession(request: NextRequest) {
         );
         const { data } = await Promise.race([userPromise, timeoutPromise]) as any;
         user = data?.user;
+
+        // Sync user to Prisma if they exist and we are not in build mode
+        if (user && Object.keys(prisma).length > 0) {
+            try {
+                // We use the Supabase ID as the Prisma ID
+                await prisma.user.upsert({
+                    where: { id: user.id },
+                    update: {
+                        email: user.email,
+                        name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                        role: user.user_metadata?.role || 'VIEWER'
+                    },
+                    create: {
+                        id: user.id,
+                        email: user.email!,
+                        name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                        role: user.user_metadata?.role || 'VIEWER'
+                    }
+                });
+            } catch (syncError) {
+                console.error('[MIDDLEWARE_SYNC_ERROR]', syncError);
+            }
+        }
     } catch (e) {
         console.error('[MIDDLEWARE_USER_FETCH_ERROR]', e);
         // On error or timeout, we proceed without a user to avoid 504s
