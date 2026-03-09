@@ -5,7 +5,14 @@ import { PrismaPg } from '@prisma/adapter-pg'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 function createPrismaClient() {
-    const connectionString = process.env.DATABASE_URL!
+    const connectionString = process.env.DATABASE_URL
+
+    // During build time on Vercel, DATABASE_URL might be missing.
+    // We provide a fallback to prevent the build from crashing when Next.js evaluates the module.
+    if (!connectionString) {
+        return new PrismaClient()
+    }
+
     const pool = new Pool({
         connectionString,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
