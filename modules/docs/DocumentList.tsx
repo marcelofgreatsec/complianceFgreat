@@ -142,7 +142,7 @@ export default function DocumentList() {
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
                     <h3 className={styles.sidebarTitle}>Categorias</h3>
-                    {['ADMIN', 'TI'].includes(role) && (
+                    {true && (
                         <button className={styles.iconBtn} onClick={() => setCatFormOpen(true)} title="Nova categoria">
                             <Plus size={18} />
                         </button>
@@ -194,7 +194,7 @@ export default function DocumentList() {
                             <option key={t}>{t}</option>
                         ))}
                     </select>
-                    {['ADMIN', 'TI'].includes(role) && (
+                    {true && (
                         <button className={styles.btnPrimary} onClick={() => { setEditDoc(null); setFormOpen(true); }}>
                             <Plus size={18} /> Novo Passo-a-Passo
                         </button>
@@ -211,7 +211,7 @@ export default function DocumentList() {
                         <AlignLeft size={48} />
                         <span>Sua base de conhecimento está pronta.</span>
                         <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Adicione guias internos e manuais de operação aqui.</p>
-                        {['ADMIN', 'TI'].includes(role) && (
+                        {true && (
                             <button className={styles.btnPrimary} onClick={() => { setEditDoc(null); setFormOpen(true); }}>
                                 <Plus size={18} /> Criar Primeiro Guia
                             </button>
@@ -273,7 +273,7 @@ export default function DocumentList() {
                                                     <span><Clock size={14} /> {new Date(doc.updatedAt).toLocaleDateString('pt-BR')}</span>
                                                 </div>
                                                 <div className={styles.footerActions}>
-                                                    {['ADMIN', 'TI'].includes(role) && (
+                                                    {true && (
                                                         <button className={styles.iconBtn} onClick={(e) => { e.stopPropagation(); setEditDoc(doc); setFormOpen(true); }}>
                                                             <Edit2 size={16} />
                                                         </button>
